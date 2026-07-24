@@ -111,14 +111,13 @@ const VideoPlayerModal = ({ token, servidor, titulo, linkVideo, onClose }) => {
                         </div>
                     </div>
 
-                    {/* PANTALLA / VIDEO — tamaño FIJO en px (no escala con la ventana). La pantalla de un cine
-                        es un objeto físico de tamaño constante; lo que cambia con el viewport es cuánta sala
-                        (butacas, paredes) se ve alrededor — eso ya lo resuelve el Canvas/cámara de Three.js. */}
+                    {/* PANTALLA / VIDEO — mismo tamaño que tenías originalmente por default en screenRect */}
                     <div
-                        className={
+                        className="absolute z-20 bg-black overflow-hidden"
+                        style={
                             modoCine
-                                ? "absolute z-20 bg-black overflow-hidden left-0 right-0 mx-auto top-[340px] md:top-[225px] aspect-video w-[500px] h-[280px] md:w-[800px] md:h-[400px]"
-                                : "absolute z-20 bg-black overflow-hidden inset-0"
+                                ? { left: "28%", top: "20%", width: "44%", height: "45%", zIndex: -0 }
+                                : { inset: 0 }
                         }
                     >
                         {!confirmado ? (
