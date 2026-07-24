@@ -1,7 +1,5 @@
 import React, { useEffect } from 'react';
-import { HiOutlineArrowLongLeft } from 'react-icons/hi2';
-import { LuUtensilsCrossed } from 'react-icons/lu';
-import { PiHandPalmBold } from 'react-icons/pi';
+import { ArrowLeft, ShieldAlert, Film } from 'lucide-react';
 
 const UnauthorizedPage = () => {
   useEffect(() => {
@@ -14,44 +12,48 @@ const UnauthorizedPage = () => {
   }, []);
 
   return (
-    // FONDO BLANCO
-    <div className="min-h-screen flex flex-col items-center justify-center bg-white text-black font-sans p-4 relative">
-      
-        <div className="relative z-10 text-center">
-          
-          {/* Icono Principal Ghost (Blanco sobre Blanco) */}
-          <div className="animate-in opacity-0 translate-y-4 transition-all duration-700 ease-out mb-8">
-            <div className="relative inline-block border-2 border-black p-6 rounded-full shadow-[inset_0_0_10px_rgba(0,0,0,0.02)]">
-                <LuUtensilsCrossed className="text-5xl text-black drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.1)]" />
-                <PiHandPalmBold className="text-3xl text-black bg-black rounded-full p-1 absolute -bottom-1 -right-1 border-2 border-black-100" />
-            </div>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white font-sans p-4 relative overflow-hidden">
+      {/* Fondo con gradiente igual al hero del Home */}
+      <div className="absolute inset-0">
+        <div className="w-full h-full bg-gradient-to-br from-[#2A0E10] via-[#17070A] to-black" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20" />
+      </div>
+
+      <div className="relative z-10 text-center max-w-lg">
+
+        {/* Icono principal */}
+        <div className="animate-in opacity-0 translate-y-4 transition-all duration-700 ease-out mb-8 flex justify-center">
+          <div className="relative inline-flex items-center justify-center border border-[#E8B04B]/30 p-6 rounded-full bg-white/5">
+            <ShieldAlert className="text-5xl text-[#E8B04B]" size={48} />
+            <Film className="text-white bg-black rounded-full p-1 absolute -bottom-1 -right-1 border border-[#E8B04B]/40" size={26} />
           </div>
-          
-          {/* Título GHOST (Blanco sobre Blanco con sombra sutil) */}
-          <h1 className="animate-in opacity-0 translate-y-4 transition-all duration-700 ease-out text-6xl font-serif font-extralight text-black mb-2 drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.08)]">
-            401
-          </h1>
-          
-          {/* Subtítulo GHOST */}
-          <h2 className="animate-in opacity-0 translate-y-4 transition-all duration-700 ease-out text-xs font-black uppercase tracking-[0.3em] text-black/90 mb-6 drop-shadow-[0_1px_1px_rgba(0,0,0,0.05)]">
-            Área Reservada
-          </h2>
-          
-          {/* Texto explicativo GHOST */}
-          <p className="animate-in opacity-0 translate-y-4 transition-all duration-700 ease-out mb-10 leading-relaxed font-serif italic text-lg text-black/90 drop-shadow-[0_1px_1px_rgba(0,0,0,0.05)]">
-             "Lo sentimos, su mesa no tiene acceso a esta sección del restaurante. Por favor, consulte con nuestro personal de servicio."
-          </p>
-          
-          {/* Botones de acción GHOST (Bordes blancos finos) */}
-          <div className="animate-in opacity-0 translate-y-4 transition-all duration-700 ease-out">
-            <a
-              href="/"
-              className="group inline-flex items-center gap-3 px-10 py-5 bg-transparent text-black border border-black font-black uppercase text-xs tracking-[0.2em] hover:bg-black-50 transition-all duration-300 drop-shadow-[0_1px_1px_rgba(0,0,0,0.05)]"
-            >
-              <HiOutlineArrowLongLeft className="text-xl text-black group-hover:-translate-x-2 transition-transform duration-300" />
-              Regresar
-            </a>
-          </div>
+        </div>
+
+        <span className="animate-in opacity-0 translate-y-4 transition-all duration-700 ease-out block text-[11px] font-bold uppercase tracking-[0.3em] text-[#E8B04B] mb-3">
+          Acceso restringido
+        </span>
+
+        <h1 className="animate-in opacity-0 translate-y-4 transition-all duration-700 ease-out text-6xl font-black text-white mb-2">
+          401
+        </h1>
+
+        <h2 className="animate-in opacity-0 translate-y-4 transition-all duration-700 ease-out text-xs font-black uppercase tracking-[0.3em] text-white/60 mb-6">
+          Área reservada
+        </h2>
+
+        <p className="animate-in opacity-0 translate-y-4 transition-all duration-700 ease-out mb-10 leading-relaxed text-white/60 text-sm">
+          No tienes permiso para ver este contenido. Inicia sesión con una cuenta autorizada o vuelve al catálogo.
+        </p>
+
+        <div className="animate-in opacity-0 translate-y-4 transition-all duration-700 ease-out">
+          <a
+            href="/"
+            className="group inline-flex items-center gap-2 px-6 py-3 bg-white text-black text-sm font-bold rounded-sm hover:bg-white/90 transition-colors"
+          >
+            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform duration-300" />
+            Volver al inicio
+          </a>
+        </div>
       </div>
 
       <style jsx>{`

@@ -63,7 +63,7 @@ function AppContent() {
       {/* 2. PANEL ADMIN — solo admin/superadmin */}
       <Route element={<ProtectedRoute element={<SidebarLayout />} />}>
 
-        <Route path="/home" element={<ProtectedRoute element={<StaffHome />} />} />
+        <Route path="/home" element={<ProtectedRoute requiredPermission="rol.index"  element={<StaffHome />} />} />
 
         {/* ROLES Y PERMISOS */}
         <Route path="/rol/listar" element={<ProtectedRoute requiredPermission="rol.index" element={<ListarRoles />} />} />
