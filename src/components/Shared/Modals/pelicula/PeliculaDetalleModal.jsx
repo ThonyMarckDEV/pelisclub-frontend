@@ -72,10 +72,10 @@ const PeliculaDetalleModal = ({ slug, onClose }) => {
                     inset-x-0 bottom-0 w-full
                     max-md:landscape:inset-0 max-md:landscape:m-auto max-md:landscape:w-[95vw] max-md:landscape:h-[95vh]
                     bg-[#0D0C0E]
-                    rounded-t-2xl max-md:landscape:rounded-sm
+                    rounded-t-lg max-md:landscape:rounded-sm
                     border border-white/10 shadow-2xl
                     overflow-y-auto
-                    max-h-[92vh] max-md:landscape:max-h-[95vh]
+                    h-screen max-md:landscape:h-[95vh]
                     transition-transform duration-300 ease-out
                     ${visible ? "translate-y-0" : "translate-y-full"}
                 `}
