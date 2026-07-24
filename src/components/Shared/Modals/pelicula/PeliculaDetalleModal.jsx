@@ -14,6 +14,7 @@ const PeliculaDetalleModal = ({ slug, onClose }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
     const [showOpciones, setShowOpciones] = useState(false);
+    const [visible, setVisible] = useState(false); // controla la animación de entrada/salida
 
     useEffect(() => {
         const load = async () => {
@@ -33,8 +34,21 @@ const PeliculaDetalleModal = ({ slug, onClose }) => {
 
     useEffect(() => {
         document.body.style.overflow = "hidden";
-        return () => { document.body.style.overflow = ""; };
+        // dispara la animación de entrada en el siguiente frame
+        const raf = requestAnimationFrame(() => setVisible(true));
+        return () => {
+            document.body.style.overflow = "";
+            cancelAnimationFrame(raf);
+        };
     }, []);
+
+    // cierra con animación de salida antes de desmontar
+    const handleClose = () => {
+        setVisible(false);
+        setTimeout(() => {
+            onClose();
+        }, 250);
+    };
 
     const embedUrl = getYoutubeEmbed(pelicula?.trailer_url);
 
@@ -45,13 +59,29 @@ const PeliculaDetalleModal = ({ slug, onClose }) => {
     return (
         <>
             {/* BACKDROP */}
-            <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm" onClick={onClose} />
+            <div
+                className={`fixed inset-0 z-50 bg-black/85 backdrop-blur-sm transition-opacity duration-300 ${
+                    visible ? "opacity-100" : "opacity-0"
+                }`}
+                onClick={handleClose}
+            />
 
-            {/* CONTENEDOR SCROLLEABLE */}
-            <div className="fixed inset-0 z-50 overflow-y-auto flex items-start md:items-center justify-center p-0 md:p-4 pointer-events-none">
-                <div className="relative w-full md:max-w-2xl bg-[#0D0C0E] md:rounded-sm border border-white/10 shadow-2xl overflow-hidden my-0 md:my-8 pointer-events-auto">
+            {/* PANEL: posicionado directo con fixed, sin wrapper flex (evita el bug de items-end + overflow-y-auto) */}
+            <div
+                className={`fixed z-50 pointer-events-auto
+                    inset-x-0 bottom-0 w-full
+                    max-md:landscape:inset-0 max-md:landscape:m-auto max-md:landscape:w-[95vw] max-md:landscape:h-[95vh]
+                    bg-[#0D0C0E]
+                    rounded-t-2xl max-md:landscape:rounded-sm
+                    border border-white/10 shadow-2xl
+                    overflow-y-auto
+                    max-h-[92vh] max-md:landscape:max-h-[95vh]
+                    transition-transform duration-300 ease-out
+                    ${visible ? "translate-y-0" : "translate-y-full"}
+                `}
+            >
                     <button
-                        onClick={onClose}
+                        onClick={handleClose}
                         className="absolute top-4 right-4 z-20 h-9 w-9 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white rounded-full transition-colors"
                     >
                         <X size={18} />
@@ -69,7 +99,7 @@ const PeliculaDetalleModal = ({ slug, onClose }) => {
                     ) : (
                         <>
                             {/* TRAILER / BANNER */}
-                            <div className="relative w-full aspect-video bg-black">
+                            <div className="relative w-full max-w-4xl mx-auto aspect-video max-md:landscape:aspect-[21/9] max-md:landscape:max-h-[38vh] bg-black">
                                 {embedUrl ? (
                                     <iframe
                                         src={embedUrl}
@@ -91,7 +121,7 @@ const PeliculaDetalleModal = ({ slug, onClose }) => {
                             </div>
 
                             {/* INFO */}
-                            <div className="p-6">
+                            <div className="p-6 max-w-4xl mx-auto">
                                 <h2 className="text-2xl font-black text-white mb-2">{pelicula.titulo}</h2>
 
                                 <div className="flex flex-wrap items-center gap-3 text-xs text-white/50 font-semibold mb-4">
@@ -168,7 +198,6 @@ const PeliculaDetalleModal = ({ slug, onClose }) => {
                             </div>
                         </>
                     )}
-                </div>
             </div>
 
             {showOpciones && pelicula && (
