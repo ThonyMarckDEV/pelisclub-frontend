@@ -37,6 +37,9 @@ import EditarPelicula from 'pages/pelicula/Update';
 // UI VIDEO
 import GestionVideo from 'pages/video/Gestion'; 
 
+// UI LEGAL
+import PoliticaPrivacidad from 'pages/legal/PoliticaPrivacidad';
+import Terminos from 'pages/legal/Terminos';
 
 // SETTINGS
 import ListarRoles from 'pages/rol/Index';
@@ -53,6 +56,8 @@ function AppContent() {
       {/* 1. SITIO PÚBLICO — una sola página, el login vive en un modal desde el TopBar */}
       <Route element={<PublicLayout />}>
         <Route path="/" element={<Home />} />
+        <Route path="/privacidad" element={<PoliticaPrivacidad />} />
+        <Route path="/terminos" element={<Terminos />} />
       </Route>
 
       {/* 2. PANEL ADMIN — solo admin/superadmin */}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Play, Star, Film, X } from "lucide-react";
+import { Play, Star, Film, X, Clapperboard } from "lucide-react";
 import { peliculas as fetchPeliculas, destacada as fetchDestacada } from "services/publicoService";
 import PeliculaDetalleModal from "components/Shared/Modals/pelicula/PeliculaDetalleModal";
 
@@ -35,6 +35,81 @@ const MovieCard = ({ pelicula, onOpen }) => (
       <p className="text-white/50 text-[10px]">{pelicula.anio_estreno}</p>
     </div>
   </button>
+);
+
+const Footer = () => (
+  <footer className="border-t border-white/10 bg-black">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-10">
+
+        {/* MARCA */}
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Clapperboard size={20} className="text-[#E8B04B]" />
+            <span className="text-white font-black text-lg uppercase tracking-wide">
+              Pelis Club
+            </span>
+          </div>
+          <p className="text-white/40 text-xs leading-relaxed max-w-xs">
+            Ningún archivo de visualización y/o descarga se encuentra alojado en nuestros servidores.
+          </p>
+        </div>
+
+        {/* NAVEGACION */}
+        <div>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-white/30 block mb-3">
+            Explorar
+          </span>
+          <ul className="space-y-2">
+            <li>
+              <a href="/" className="text-white/50 text-xs font-semibold hover:text-[#E8B04B] transition-colors">
+                Inicio
+              </a>
+            </li>
+            <li>
+              <a href="/?filtro=populares" className="text-white/50 text-xs font-semibold hover:text-[#E8B04B] transition-colors">
+                Populares
+              </a>
+            </li>
+            <li>
+              <a href="/?filtro=recientes" className="text-white/50 text-xs font-semibold hover:text-[#E8B04B] transition-colors">
+                Recién agregadas
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        {/* LEGAL / CONTACTO */}
+        <div>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-white/30 block mb-3">
+            Información
+          </span>
+          <ul className="space-y-2">
+            <li>
+              <a href="/terminos" className="text-white/50 text-xs font-semibold hover:text-[#E8B04B] transition-colors">
+                Términos y condiciones
+              </a>
+            </li>
+            <li>
+              <a href="/privacidad" className="text-white/50 text-xs font-semibold hover:text-[#E8B04B] transition-colors">
+                Política de privacidad
+              </a>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div className="pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <p className="text-white/30 text-[11px]">
+          © {new Date().getFullYear()} Pelis Club. Todos los derechos reservados.
+        </p>
+        <p className="text-white/20 text-[11px]">
+          Hecho con <span className="text-[#E8B04B]">♥</span> para los amantes del cine
+        </p>
+      </div>
+    </div>
+  </footer>
 );
 
 const Home = () => {
@@ -110,7 +185,7 @@ const Home = () => {
   const tituloCatalogo = filtroActivo ? filtroActivo.valor : "Catálogo";
 
   return (
-    <div className="bg-black min-h-screen">
+    <div className="bg-black min-h-screen flex flex-col">
       {/* HERO */}
       <section className="relative h-[70vh] min-h-[420px] w-full overflow-hidden">
         <div className="absolute inset-0">
@@ -181,7 +256,7 @@ const Home = () => {
       </section>
 
       {/* CATALOGO */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12 flex-1 w-full">
 
         {/* FILTRO ACTIVO */}
         {filtroActivo && (
@@ -227,6 +302,8 @@ const Home = () => {
           </div>
         )}
       </section>
+
+      <Footer />
 
       {slugAbierto && (
         <PeliculaDetalleModal slug={slugAbierto} onClose={cerrarModal} />
