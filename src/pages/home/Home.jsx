@@ -6,6 +6,7 @@ import PeliculaDetalleModal from "components/Shared/Modals/pelicula/PeliculaDeta
 import MovieCard from "./MovieCard";
 import Footer from "./Footer";
 import CatalogoSearch from "./CatalogoSearch";
+import InstallAppButton from "components/Shared/InstallAppButton";
 
 const Home = () => {
   const [searchParams] = useSearchParams();
@@ -134,6 +135,7 @@ const Home = () => {
                   <Play size={16} className="fill-black" />
                   Reproducir
                 </button>
+                <InstallAppButton />
               </div>
 
               <div className="flex items-center gap-4 mt-6 text-[11px] text-white/40 font-semibold">
