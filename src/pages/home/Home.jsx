@@ -114,7 +114,7 @@ const Home = () => {
           ) : featured ? (
             <>
               <span className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#E8B04B] mb-3">
-                Cortometraje destacado
+                Película destacada
               </span>
               <h1 className="text-4xl sm:text-5xl font-black text-white max-w-xl leading-tight mb-4">
                 {featured.titulo}
@@ -159,7 +159,7 @@ const Home = () => {
           ) : (
             <div className="flex flex-col items-start gap-2 text-white/30">
               <Film size={40} />
-              <p className="text-sm font-semibold">Todavía no hay cortometrajes publicados.</p>
+              <p className="text-sm font-semibold">Todavía no hay peliculas publicadas.</p>
             </div>
           )}
         </div>
@@ -208,7 +208,7 @@ const Home = () => {
         ) : (
           <div className="flex flex-col items-center justify-center py-16 text-white/30 gap-2">
             <Film size={32} />
-            <p className="text-sm font-semibold">No hay cortometrajes en esta categoría todavía.</p>
+            <p className="text-sm font-semibold">No hay peliculas en esta categoría todavía.</p>
           </div>
         )}
       </section>
