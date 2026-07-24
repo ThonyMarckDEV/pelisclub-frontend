@@ -1,19 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {ChevronDown, LogOut, ShieldCheck, Search, Menu, X } from "lucide-react";
+import { ChevronDown, LogOut, ShieldCheck, Search, Menu, X } from "lucide-react";
 import { useAuth } from "context/AuthContext";
 import LoginModal from "components/Shared/Modals/Auth/LoginModal";
+import { generos as fetchGeneros } from "services/publicoService";
 import logo from "assets/img/logo.png";
-
-// Placeholder — luego viene de /api/generos
-const GENEROS = [
-  { nombre: "Drama", slug: "drama" },
-  { nombre: "Comedia", slug: "comedia" },
-  { nombre: "Terror", slug: "terror" },
-  { nombre: "Documental", slug: "documental" },
-  { nombre: "Suspenso", slug: "suspenso" },
-  { nombre: "Ciencia ficción", slug: "ciencia-ficcion" },
-];
 
 const CATALOGO = [
   { nombre: "Estrenos", slug: "estrenos" },
@@ -22,7 +13,6 @@ const CATALOGO = [
   { nombre: "Todos los cortos", slug: "todos" },
 ];
 
-// Dropdown que abre al pasar el mouse (con pequeño delay al salir para que no parpadee)
 const HoverDropdown = ({ label, items, onSelect }) => {
   const [open, setOpen] = useState(false);
   const closeTimer = useRef(null);
@@ -46,7 +36,7 @@ const HoverDropdown = ({ label, items, onSelect }) => {
       {open && (
         <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 w-52">
           <div className="bg-[#111013] border border-white/10 rounded-lg shadow-2xl py-2 overflow-hidden">
-            {items.map((item) => (
+            {items.length > 0 ? items.map((item) => (
               <button
                 key={item.slug}
                 onClick={() => {
@@ -57,7 +47,9 @@ const HoverDropdown = ({ label, items, onSelect }) => {
               >
                 {item.nombre}
               </button>
-            ))}
+            )) : (
+              <p className="px-4 py-3 text-[12px] text-white/30 text-center">Sin géneros aún</p>
+            )}
           </div>
         </div>
       )}
@@ -70,8 +62,21 @@ const TopBar = () => {
   const [showLogin, setShowLogin] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [generos, setGeneros] = useState([]);
   const menuRef = useRef(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const loadGeneros = async () => {
+      try {
+        const response = await fetchGeneros();
+        setGeneros((response.data || []).map(g => ({ nombre: g.nombre, slug: g.slug })));
+      } catch (error) {
+        setGeneros([]);
+      }
+    };
+    loadGeneros();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -98,21 +103,17 @@ const TopBar = () => {
         <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-[#E8B04B]/70 to-transparent" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
-          {/* LOGO */}
-
           <Link to="/" className="flex items-center gap-3 shrink-0 group">
             <img
               src={logo}
               alt="Pelis Club"
               className="h-20 w-20 md:h-16 md:w-16 object-contain transition-transform duration-300 group-hover:scale-105"
             />
-
             <span className="font-extrabold tracking-[0.15em] text-[#F5F0E8] text-lg md:text-xl uppercase">
               Pelis<span className="text-[#E8B04B]">Club</span>
             </span>
           </Link>
 
-          {/* NAV DESKTOP */}
           <nav className="hidden md:flex items-center gap-8">
             <Link
               to="/"
@@ -121,10 +122,9 @@ const TopBar = () => {
               Inicio
             </Link>
             <HoverDropdown label="Catálogo" items={CATALOGO} onSelect={irACatalogo} />
-            <HoverDropdown label="Géneros" items={GENEROS} onSelect={irAGenero} />
+            <HoverDropdown label="Géneros" items={generos} onSelect={irAGenero} />
           </nav>
 
-          {/* ACCIONES */}
           <div className="flex items-center gap-3">
             <button
               className="hidden sm:flex p-2 text-white/60 hover:text-[#E8B04B] transition-colors"
@@ -209,7 +209,6 @@ const TopBar = () => {
           </div>
         </div>
 
-        {/* NAV MOBILE (sin hover, aquí sí colapsable con tap) */}
         {mobileOpen && (
           <nav className="md:hidden border-t border-white/10 bg-black px-4 py-3 space-y-3">
             <Link
@@ -238,23 +237,25 @@ const TopBar = () => {
               </div>
             </div>
 
-            <div>
-              <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1.5">Géneros</p>
-              <div className="flex flex-wrap gap-2">
-                {GENEROS.map((g) => (
-                  <button
-                    key={g.slug}
-                    onClick={() => {
-                      irAGenero(g.slug);
-                      setMobileOpen(false);
-                    }}
-                    className="px-3 py-1.5 text-xs font-semibold text-white/70 bg-white/5 rounded-full"
-                  >
-                    {g.nombre}
-                  </button>
-                ))}
+            {generos.length > 0 && (
+              <div>
+                <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1.5">Géneros</p>
+                <div className="flex flex-wrap gap-2">
+                  {generos.map((g) => (
+                    <button
+                      key={g.slug}
+                      onClick={() => {
+                        irAGenero(g.slug);
+                        setMobileOpen(false);
+                      }}
+                      className="px-3 py-1.5 text-xs font-semibold text-white/70 bg-white/5 rounded-full"
+                    >
+                      {g.nombre}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </nav>
         )}
       </header>

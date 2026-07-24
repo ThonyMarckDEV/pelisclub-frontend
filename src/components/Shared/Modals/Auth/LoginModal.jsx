@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { X, Film, ShieldCheck, User } from "lucide-react";
+import { X, ShieldCheck, User } from "lucide-react";
 import { useGoogleLogin } from "@react-oauth/google";
 import { toast } from "react-toastify";
 import { useAuth } from "context/AuthContext";
 import LoadingScreen from "components/Shared/LoadingScreen";
+import logo from "assets/img/logo.png";
 
 const LoginModal = ({ onClose }) => {
   const { loginWithGoogle, loginStaff } = useAuth();
@@ -59,9 +60,11 @@ const LoginModal = ({ onClose }) => {
         </button>
 
         <div className="flex flex-col items-center text-center mb-6">
-          <div className="h-14 w-14 rounded-sm bg-[#B8232B] flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(184,35,43,0.5)]">
-            <Film size={24} className="text-[#F5F0E8]" />
-          </div>
+          <img
+            src={logo}
+            alt="Pelis Club"
+            className="h-20 w-20 object-contain mb-3"
+          />
           <h2 className="text-lg font-black text-white uppercase tracking-wide">
             Entra a Pelis Club
           </h2>
