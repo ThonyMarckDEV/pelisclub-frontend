@@ -78,7 +78,7 @@ const LoginModal = ({ onClose }) => {
               tab === "cliente" ? "bg-[#E8B04B] text-black" : "text-white/50 hover:text-white/80"
             }`}
           >
-            <User size={13} /> Cliente
+            <User size={13} /> Usuario
           </button>
           <button
             onClick={() => setTab("staff")}

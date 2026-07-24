@@ -2,26 +2,19 @@ import { fetchWithAuth } from 'js/authToken';
 import API_BASE_URL from 'js/urlHelper';
 import { handleResponse } from 'utilities/Responses/handleResponse';
 
-const BASE_URL = `${API_BASE_URL}/api/cliente`;
+const BASE_URL = `${API_BASE_URL}/api/actor`;
 
 export const index = async (page = 1, filters = {}) => {
     const params = new URLSearchParams({
         page:   page,
         search: filters.search || '',
-        estado: filters.estado || '',
-        tipo:   filters.tipo   || '',
     });
     const response = await fetchWithAuth(`${BASE_URL}/index?${params.toString()}`, { method: 'GET' });
     return handleResponse(response);
 };
 
-export const combobox = async (page = 1, filters = {}) => {
-    const params = new URLSearchParams({
-        page:   page,
-        search: filters.search || '',
-        estado: filters.estado || '',
-    });
-    const response = await fetchWithAuth(`${BASE_URL}/combobox?${params.toString()}`, { method: 'GET' });
+export const combobox = async () => {
+    const response = await fetchWithAuth(`${BASE_URL}/combobox`, { method: 'GET' });
     return handleResponse(response);
 };
 
@@ -48,10 +41,7 @@ export const update = async (id, data) => {
     return handleResponse(response);
 };
 
-export const toggleStatus = async (id) => {
-    const response = await fetchWithAuth(`${BASE_URL}/status/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' }
-    });
+export const destroy = async (id) => {
+    const response = await fetchWithAuth(`${BASE_URL}/delete/${id}`, { method: 'DELETE' });
     return handleResponse(response);
 };

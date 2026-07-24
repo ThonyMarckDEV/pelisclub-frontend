@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Film, ChevronDown, LogOut, ShieldCheck, Search, Menu, X } from "lucide-react";
+import {ChevronDown, LogOut, ShieldCheck, Search, Menu, X } from "lucide-react";
 import { useAuth } from "context/AuthContext";
 import LoginModal from "components/Shared/Modals/Auth/LoginModal";
+import logo from "assets/img/logo.png";
 
 // Placeholder — luego viene de /api/generos
 const GENEROS = [
@@ -98,11 +99,15 @@ const TopBar = () => {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
           {/* LOGO */}
-          <Link to="/" className="flex items-center gap-2 shrink-0 group">
-            <div className="h-9 w-9 rounded-sm bg-[#B8232B] flex items-center justify-center shadow-[0_0_18px_rgba(184,35,43,0.45)] group-hover:shadow-[0_0_24px_rgba(184,35,43,0.65)] transition-shadow">
-              <Film size={18} className="text-[#F5F0E8]" strokeWidth={2.2} />
-            </div>
-            <span className="font-black tracking-[0.15em] text-[#F5F0E8] text-lg uppercase">
+
+          <Link to="/" className="flex items-center gap-3 shrink-0 group">
+            <img
+              src={logo}
+              alt="Pelis Club"
+              className="h-20 w-20 md:h-16 md:w-16 object-contain transition-transform duration-300 group-hover:scale-105"
+            />
+
+            <span className="font-extrabold tracking-[0.15em] text-[#F5F0E8] text-lg md:text-xl uppercase">
               Pelis<span className="text-[#E8B04B]">Club</span>
             </span>
           </Link>
@@ -168,7 +173,7 @@ const TopBar = () => {
 
                     {isStaff && (
                       <Link
-                        to="/admin/home"
+                        to="/home"
                         onClick={() => setMenuOpen(false)}
                         className="block px-4 py-2.5 text-xs font-semibold text-white/70 hover:bg-white/5 hover:text-[#E8B04B] transition-colors"
                       >

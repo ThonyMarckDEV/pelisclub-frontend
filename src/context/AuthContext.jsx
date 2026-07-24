@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import authService from 'services/authService'; 
-import jwtUtils from 'utilities/Token/jwtUtils'; 
+import { useNavigate } from 'react-router-dom';
+import authService from 'services/authService';
+import jwtUtils from 'utilities/Token/jwtUtils';
 import { logout as logoutAction } from 'js/logout';
 import LoadingScreen from 'components/Shared/LoadingScreen';
 
@@ -12,10 +13,11 @@ export const AuthProvider = ({ children }) => {
     const [permissions, setPermissions] = useState([]);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     const checkAuth = async () => {
         const token = jwtUtils.getAccessTokenFromCookie();
-        
+
         if (!token) {
             handleLogoutState();
             return;
@@ -25,14 +27,14 @@ export const AuthProvider = ({ children }) => {
             const response = await authService.verifySession();
             const userData = response.data || response;
 
-            setUser(userData); 
+            setUser(userData);
             setRole(userData.rol?.nombre || userData.rol || null);
             setPermissions(userData.permisos || []);
             setIsAuthenticated(true);
 
         } catch (error) {
             console.error("Sesión no válida:", error);
-            logoutAction(); 
+            logoutAction();
             handleLogoutState();
         } finally {
             setLoading(false);
@@ -47,7 +49,6 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
     };
 
-    // Función mágica para validar si el usuario tiene un permiso específico
     const can = (permissionName) => {
         return permissions.includes(permissionName);
     };
@@ -57,9 +58,26 @@ export const AuthProvider = ({ children }) => {
         // eslint-disable-next-line
     }, []);
 
+    // Refresca sesión desde /me (lo que ya tenías)
     const login = async () => {
         setLoading(true);
         await checkAuth();
+    };
+
+    // ================= LOGIN STAFF (usuario/contraseña) =================
+    const loginStaff = async (username, password, rememberMe) => {
+        const result = await authService.login(username, password, rememberMe);
+        document.cookie = `access_token=${result.access_token}; path=/; Secure; SameSite=Strict`;
+        await checkAuth();
+        navigate('/home');
+    };
+
+    // ================= LOGIN GOOGLE (usuario cliente) =================
+    const loginWithGoogle = async (code) => {
+        const result = await authService.loginGoogle(code);
+        document.cookie = `access_token=${result.access_token}; path=/; Secure; SameSite=Strict`;
+        await checkAuth();
+        // no navega, se queda donde el usuario estaba (Home)
     };
 
     const logout = () => {
@@ -67,16 +85,21 @@ export const AuthProvider = ({ children }) => {
         handleLogoutState();
     };
 
+    const isStaff = role === 'admin' || role === 'superadmin';
+
     return (
-        <AuthContext.Provider value={{ 
-            user, 
-            role, 
+        <AuthContext.Provider value={{
+            user,
+            role,
             permissions,
             can,
-            isAuthenticated, 
-            loading, 
-            login, 
-            logout 
+            isAuthenticated,
+            isStaff,
+            loading,
+            login,
+            loginStaff,
+            loginWithGoogle,
+            logout
         }}>
             {loading ? <LoadingScreen /> : children}
         </AuthContext.Provider>

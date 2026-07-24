@@ -15,8 +15,20 @@ import ErrorPage401 from 'components/ErrorPage401';
 // UI PÚBLICO (Pelis Club) — todo vive en Home, incluido el login (modal)
 import Home from 'pages/home/Home';
 
+// UI PRIVADAS
 // UI ADMIN
 import StaffHome from 'pages/staff/Home';
+
+// UI GENEROS
+import ListarGeneros from 'pages/genero/Index';
+import AgregarGenero from 'pages/genero/Store';
+import EditarGenero from 'pages/genero/Update';
+
+// UI ACTORES
+import ListarActores from 'pages/actor/Index';
+import AgregarActor from 'pages/actor/Store';
+import EditarActor from 'pages/actor/Update';
+
 
 // SETTINGS
 import ListarRoles from 'pages/rol/Index';
@@ -37,8 +49,22 @@ function AppContent() {
 
       {/* 2. PANEL ADMIN — solo admin/superadmin */}
       <Route element={<ProtectedRoute element={<SidebarLayout />} />}>
-        <Route path="/admin/home" element={<ProtectedRoute element={<StaffHome />} />} />
-        <Route path="/admin/rol/listar" element={<ProtectedRoute requiredPermission="rol.index" element={<ListarRoles />} />} />
+
+        <Route path="/home" element={<ProtectedRoute element={<StaffHome />} />} />
+
+        {/* ROLES Y PERMISOS */}
+        <Route path="/rol/listar" element={<ProtectedRoute requiredPermission="rol.index" element={<ListarRoles />} />} />
+
+        {/* GENEROS */}
+        <Route path="/genero/listar" element={<ProtectedRoute requiredPermission="genero.index" element={<ListarGeneros />} />} />
+        <Route path="/genero/agregar" element={<ProtectedRoute requiredPermission="genero.store" element={<AgregarGenero />} />} />
+        <Route path="/genero/editar/:id" element={<ProtectedRoute requiredPermission="genero.update" element={<EditarGenero />} />} />
+
+        {/* ACTORES */}
+        <Route path="/actor/listar" element={<ProtectedRoute requiredPermission="actor.index" element={<ListarActores />} />} />
+        <Route path="/actor/agregar" element={<ProtectedRoute requiredPermission="actor.store" element={<AgregarActor />} />} />
+        <Route path="/actor/editar/:id" element={<ProtectedRoute requiredPermission="actor.update" element={<EditarActor />} />} />
+
       </Route>
 
       {/* 3. ERRORES */}
