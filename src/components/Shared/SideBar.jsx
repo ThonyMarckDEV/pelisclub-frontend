@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Link, Links, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
     Bars3Icon,
     ChevronDownIcon,
@@ -11,6 +11,7 @@ import {
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 import { Settings, Film, TagIcon, Users } from 'lucide-react';
 import { useAuth } from 'context/AuthContext';
+import logo from 'assets/img/logo.png';
 
 const MENU_GROUPS = [
     {
@@ -158,17 +159,30 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
 
                 <Link
                     to="/"
-                    className={`flex items-center justify-center flex-shrink-0 border-b border-white/10 transition-all duration-300 relative ${isCollapsed ? 'h-24 md:h-20' : 'h-24'}`}
+                    className={`flex items-center justify-center flex-shrink-0 border-b border-white/10 transition-all duration-300 relative ${
+                        isCollapsed ? 'h-24 md:h-20' : 'h-24'
+                    }`}
                 >
-                    <div className={`hidden md:flex absolute h-10 w-10 rounded-sm bg-[#B8232B] items-center justify-center transition-all duration-300 ${
-                        isCollapsed ? 'opacity-100 scale-100 delay-100' : 'opacity-0 scale-50 pointer-events-none'
-                    }`}>
-                        <Film size={18} className="text-[#F5F0E8]" />
-                    </div>
+                    {/* Logo cuando la sidebar está colapsada */}
+                    <img
+                        src={logo}
+                        alt="Pelis Club"
+                        className={`hidden md:block absolute object-contain transition-all duration-300 ${
+                            isCollapsed
+                                ? 'h-14 w-14 opacity-100 scale-100'
+                                : 'h-0 w-0 opacity-0 scale-75 pointer-events-none'
+                        }`}
+                    />
 
-                    <div className={`font-black text-lg tracking-tight overflow-hidden transition-all duration-300 whitespace-nowrap text-white uppercase
-                        ${isCollapsed ? 'md:w-0 md:opacity-0' : 'w-auto opacity-100'}`}>
-                        Pelis<span className="text-[#E8B04B]">Club</span>
+                    {/* Logo + texto cuando está expandida */}
+                    <div
+                        className={`flex items-center gap-3 transition-all duration-300 ${
+                            isCollapsed ? 'md:opacity-0 md:scale-95' : 'opacity-100'
+                        }`}
+                    >
+                        <span className="font-black text-lg tracking-tight uppercase text-white whitespace-nowrap">
+                            Pelis<span className="text-[#E8B04B]">Club</span>
+                        </span>
                     </div>
                 </Link>
 

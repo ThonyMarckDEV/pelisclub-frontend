@@ -29,6 +29,11 @@ import ListarActores from 'pages/actor/Index';
 import AgregarActor from 'pages/actor/Store';
 import EditarActor from 'pages/actor/Update';
 
+// UI PELICULAS
+import ListarPeliculas from 'pages/pelicula/Index';
+import AgregarPelicula from 'pages/pelicula/Store';
+import EditarPelicula from 'pages/pelicula/Update';
+
 
 // SETTINGS
 import ListarRoles from 'pages/rol/Index';
@@ -64,6 +69,11 @@ function AppContent() {
         <Route path="/actor/listar" element={<ProtectedRoute requiredPermission="actor.index" element={<ListarActores />} />} />
         <Route path="/actor/agregar" element={<ProtectedRoute requiredPermission="actor.store" element={<AgregarActor />} />} />
         <Route path="/actor/editar/:id" element={<ProtectedRoute requiredPermission="actor.update" element={<EditarActor />} />} />
+
+        {/* PELICULAS */}
+        <Route path="/pelicula/listar" element={<ProtectedRoute requiredPermission="pelicula.index" element={<ListarPeliculas />} />} />
+        <Route path="/pelicula/agregar" element={<ProtectedRoute requiredPermission="pelicula.store" element={<AgregarPelicula />} />} />
+        <Route path="/pelicula/editar/:id" element={<ProtectedRoute requiredPermission="pelicula.update" element={<EditarPelicula />} />} />
 
       </Route>
 

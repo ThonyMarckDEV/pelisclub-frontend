@@ -54,10 +54,10 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   return (
     <nav className="flex flex-wrap justify-center items-center gap-1.5 md:gap-2 w-full mt-4 md:mt-0">
       <button
-          type="button" // 🔥 CRUCIAL: Evita el submit accidental
+          type="button"
           onClick={() => onPageChange(currentPage - 1)}
-          disabled={currentPage === 1} 
-          className="px-2.5 py-1.5 md:px-4 md:py-2 text-[11px] md:text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 transition-colors"
+          disabled={currentPage === 1}
+          className="px-2.5 py-1.5 md:px-4 md:py-2 text-[11px] md:text-sm font-medium text-white/60 bg-white/5 border border-white/10 rounded-sm hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:hover:bg-white/5 transition-colors"
       >
           Anterior
       </button>
@@ -65,30 +65,30 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
       <div className="flex flex-wrap justify-center items-center gap-1 md:gap-2">
           {paginationRange.map((pageNumber, index) => {
             if (pageNumber === DOTS) {
-              return <span key={`${pageNumber}-${index}`} className="px-1 md:px-2 py-1 text-xs md:text-sm font-medium text-gray-500">...</span>;
+              return <span key={`${pageNumber}-${index}`} className="px-1 md:px-2 py-1 text-xs md:text-sm font-medium text-white/30">...</span>;
             }
             return (
               <button
-                type="button" // 🔥 CRUCIAL: Evita el submit accidental
+                type="button"
                 key={pageNumber}
                 onClick={() => onPageChange(pageNumber)}
-                className={`px-2.5 py-1.5 md:px-4 md:py-2 text-[11px] md:text-sm font-medium border rounded-md transition-colors ${
+                className={`px-2.5 py-1.5 md:px-4 md:py-2 text-[11px] md:text-sm font-bold border rounded-sm transition-colors ${
                   currentPage === pageNumber
-                    ? 'bg-black text-white border-black shadow-sm'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    ? 'bg-[#E8B04B] text-black border-[#E8B04B]'
+                    : 'bg-white/5 text-white/60 border-white/10 hover:bg-white/10 hover:text-white'
                 }`}
               >
                 {pageNumber}
-              </button> 
+              </button>
             );
           })}
       </div>
 
       <button
-          type="button" // 🔥 CRUCIAL: Evita el submit accidental
+          type="button"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="px-2.5 py-1.5 md:px-4 md:py-2 text-[11px] md:text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 transition-colors"
+          className="px-2.5 py-1.5 md:px-4 md:py-2 text-[11px] md:text-sm font-medium text-white/60 bg-white/5 border border-white/10 rounded-sm hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:hover:bg-white/5 transition-colors"
       >
           Siguiente
       </button>
