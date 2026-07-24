@@ -202,7 +202,6 @@ export default function CinemaRoom({
                 position={[0,-0.35,-3]}
                 receiveShadow
             >
-                <boxGeometry args={[19,.7,3.5]} />
                 <meshStandardMaterial
                     color="#3d1113"
                 />
