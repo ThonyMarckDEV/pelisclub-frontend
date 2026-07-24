@@ -40,8 +40,11 @@ const MovieCard = ({ pelicula, onOpen }) => (
 const Home = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+
   const generoSlug = searchParams.get("genero") || "";
   const filtroTipo = searchParams.get("filtro") || "";
+  const searchTerm = searchParams.get("search") || "";
+  const peliculaSlug = searchParams.get("pelicula") || "";
 
   const [featured, setFeatured] = useState(null);
   const [catalogo, setCatalogo] = useState([]);
@@ -67,26 +70,43 @@ const Home = () => {
   const loadCatalogo = useCallback(async () => {
     setLoadingCatalogo(true);
     try {
-      const response = await fetchPeliculas(1, { genero: generoSlug, filtro: filtroTipo });
+      const response = await fetchPeliculas(1, { genero: generoSlug, filtro: filtroTipo, search: searchTerm });
       setCatalogo(response.data || []);
     } catch (error) {
       setCatalogo([]);
     } finally {
       setLoadingCatalogo(false);
     }
-  }, [generoSlug, filtroTipo]);
+  }, [generoSlug, filtroTipo, searchTerm]);
 
   useEffect(() => {
     loadCatalogo();
   }, [loadCatalogo]);
 
+  // Si llega ?pelicula=slug en la URL (ej. desde una sugerencia del buscador), abre el modal directo
+  useEffect(() => {
+    if (peliculaSlug) {
+      setSlugAbierto(peliculaSlug);
+    }
+  }, [peliculaSlug]);
+
   const filtroActivo = generoSlug
     ? { tipo: "Género", valor: generoSlug.replace(/-/g, " ") }
     : filtroTipo
     ? { tipo: "Filtro", valor: filtroTipo.replace(/-/g, " ") }
+    : searchTerm
+    ? { tipo: "Búsqueda", valor: searchTerm }
     : null;
 
   const limpiarFiltro = () => navigate("/");
+
+  const cerrarModal = () => {
+    setSlugAbierto(null);
+    // Si el modal se abrió por query param (?pelicula=), lo limpiamos de la URL al cerrar
+    if (peliculaSlug) {
+      navigate("/", { replace: true });
+    }
+  };
 
   const tituloCatalogo = filtroActivo ? filtroActivo.valor : "Catálogo";
 
@@ -159,7 +179,7 @@ const Home = () => {
           ) : (
             <div className="flex flex-col items-start gap-2 text-white/30">
               <Film size={40} />
-              <p className="text-sm font-semibold">Todavía no hay peliculas publicadas.</p>
+              <p className="text-sm font-semibold">Todavía no hay películas publicadas.</p>
             </div>
           )}
         </div>
@@ -208,13 +228,13 @@ const Home = () => {
         ) : (
           <div className="flex flex-col items-center justify-center py-16 text-white/30 gap-2">
             <Film size={32} />
-            <p className="text-sm font-semibold">No hay peliculas en esta categoría todavía.</p>
+            <p className="text-sm font-semibold">No hay películas en esta categoría todavía.</p>
           </div>
         )}
       </section>
 
       {slugAbierto && (
-        <PeliculaDetalleModal slug={slugAbierto} onClose={() => setSlugAbierto(null)} />
+        <PeliculaDetalleModal slug={slugAbierto} onClose={cerrarModal} />
       )}
     </div>
   );

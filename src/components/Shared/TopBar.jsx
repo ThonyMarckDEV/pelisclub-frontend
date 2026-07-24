@@ -1,16 +1,16 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronDown, LogOut, ShieldCheck, Search, Menu, X } from "lucide-react";
+import { ChevronDown, LogOut, ShieldCheck, Search, Menu, X, Film } from "lucide-react";
 import { useAuth } from "context/AuthContext";
 import LoginModal from "components/Shared/Modals/Auth/LoginModal";
-import { generos as fetchGeneros } from "services/publicoService";
+import { generos as fetchGeneros, peliculas as fetchPeliculas } from "services/publicoService";
 import logo from "assets/img/logo.png";
 
 const CATALOGO = [
   { nombre: "Estrenos", slug: "estrenos" },
   { nombre: "Más vistos", slug: "mas-vistos" },
   { nombre: "Mejor calificados", slug: "mejor-calificados" },
-  { nombre: "Todos los cortos", slug: "todos" },
+  { nombre: "Todos las películas", slug: "todos" },
 ];
 
 const HoverDropdown = ({ label, items, onSelect }) => {
@@ -57,12 +57,144 @@ const HoverDropdown = ({ label, items, onSelect }) => {
   );
 };
 
+const SearchBox = ({ onNavigateSearch, onSelectPelicula }) => {
+  const [open, setOpen] = useState(false);
+  const [term, setTerm] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const wrapperRef = useRef(null);
+  const inputRef = useRef(null);
+  const debounceRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (open) {
+      inputRef.current?.focus();
+    } else {
+      setTerm("");
+      setSuggestions([]);
+    }
+  }, [open]);
+
+  const fetchSuggestions = async (value) => {
+    if (!value.trim()) {
+      setSuggestions([]);
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await fetchPeliculas(1, { search: value });
+      setSuggestions((response.data || []).slice(0, 5));
+    } catch (error) {
+      setSuggestions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (e) => {
+    const value = e.target.value;
+    setTerm(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => fetchSuggestions(value), 350);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && term.trim()) {
+      onNavigateSearch(term.trim());
+      setOpen(false);
+    }
+    if (e.key === "Escape") {
+      setOpen(false);
+    }
+  };
+
+  const handleSelect = (pelicula) => {
+    onSelectPelicula(pelicula.slug);
+    setOpen(false);
+  };
+
+  return (
+    <div className="relative" ref={wrapperRef}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="hidden sm:flex p-2 text-white/60 hover:text-[#E8B04B] transition-colors"
+        aria-label="Buscar"
+      >
+        <Search size={18} />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-2 w-80 z-50">
+          <div className="bg-[#111013] border border-white/10 rounded-lg shadow-2xl overflow-hidden">
+            <div className="flex items-center gap-2 px-3 py-2.5 border-b border-white/10">
+              <Search size={15} className="text-white/30 shrink-0" />
+              <input
+                ref={inputRef}
+                type="text"
+                value={term}
+                onChange={handleChange}
+                onKeyDown={handleKeyDown}
+                placeholder="Buscar película..."
+                className="w-full bg-transparent text-sm text-white placeholder-white/30 outline-none"
+              />
+              {loading && (
+                <div className="w-3.5 h-3.5 border-2 border-white/20 border-t-[#E8B04B] rounded-full animate-spin shrink-0" />
+              )}
+            </div>
+
+            {term.trim() && (
+              <div className="max-h-72 overflow-y-auto">
+                {suggestions.length > 0 ? (
+                  suggestions.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => handleSelect(p)}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 transition-colors text-left"
+                    >
+                      <div className="w-8 h-11 rounded-sm bg-black border border-white/10 overflow-hidden shrink-0">
+                        {p.portada_url ? (
+                          <img src={p.portada_url} alt={p.titulo} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Film size={12} className="text-white/20" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-xs font-bold text-white truncate">{p.titulo}</span>
+                        <span className="text-[10px] text-white/40">{p.anio_estreno}</span>
+                      </div>
+                    </button>
+                  ))
+                ) : !loading ? (
+                  <p className="px-3 py-4 text-xs text-white/30 text-center">Sin resultados</p>
+                ) : null}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const TopBar = () => {
   const { user, isAuthenticated, isStaff, logout } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [generos, setGeneros] = useState([]);
+  const [mobileSearch, setMobileSearch] = useState("");
   const menuRef = useRef(null);
   const navigate = useNavigate();
 
@@ -96,6 +228,16 @@ const TopBar = () => {
 
   const irAGenero = (slug) => navigate(`/?genero=${slug}`);
   const irACatalogo = (slug) => navigate(`/?filtro=${slug}`);
+  const irABusqueda = (term) => navigate(`/?search=${encodeURIComponent(term)}`);
+  const irAPelicula = (slug) => navigate(`/?pelicula=${slug}`);
+
+  const handleMobileSearchSubmit = (e) => {
+    e.preventDefault();
+    if (!mobileSearch.trim()) return;
+    irABusqueda(mobileSearch.trim());
+    setMobileSearch("");
+    setMobileOpen(false);
+  };
 
   return (
     <>
@@ -126,12 +268,7 @@ const TopBar = () => {
           </nav>
 
           <div className="flex items-center gap-3">
-            <button
-              className="hidden sm:flex p-2 text-white/60 hover:text-[#E8B04B] transition-colors"
-              aria-label="Buscar"
-            >
-              <Search size={18} />
-            </button>
+            <SearchBox onNavigateSearch={irABusqueda} onSelectPelicula={irAPelicula} />
 
             {isAuthenticated ? (
               <div className="relative" ref={menuRef}>
@@ -211,6 +348,17 @@ const TopBar = () => {
 
         {mobileOpen && (
           <nav className="md:hidden border-t border-white/10 bg-black px-4 py-3 space-y-3">
+            <form onSubmit={handleMobileSearchSubmit} className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-sm px-3 py-2">
+              <Search size={15} className="text-white/30 shrink-0" />
+              <input
+                type="text"
+                value={mobileSearch}
+                onChange={(e) => setMobileSearch(e.target.value)}
+                placeholder="Buscar película..."
+                className="w-full bg-transparent text-sm text-white placeholder-white/30 outline-none"
+              />
+            </form>
+
             <Link
               to="/"
               onClick={() => setMobileOpen(false)}
