@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Play, Info, Star, Film, X } from "lucide-react";
+import { Play, Star, Film, X } from "lucide-react";
 import { peliculas as fetchPeliculas, destacada as fetchDestacada } from "services/publicoService";
 import PeliculaDetalleModal from "components/Shared/Modals/pelicula/PeliculaDetalleModal";
 
@@ -102,7 +102,6 @@ const Home = () => {
 
   const cerrarModal = () => {
     setSlugAbierto(null);
-    // Si el modal se abrió por query param (?pelicula=), lo limpiamos de la URL al cerrar
     if (peliculaSlug) {
       navigate("/", { replace: true });
     }
@@ -144,16 +143,12 @@ const Home = () => {
               </p>
 
               <div className="flex items-center gap-3">
-                <button className="flex items-center gap-2 px-6 py-3 bg-white text-black text-sm font-bold rounded-sm hover:bg-white/90 transition-colors">
-                  <Play size={16} className="fill-black" />
-                  Reproducir
-                </button>
                 <button
                   onClick={() => setSlugAbierto(featured.slug)}
-                  className="flex items-center gap-2 px-6 py-3 bg-white/10 text-white text-sm font-bold rounded-sm border border-white/20 hover:bg-white/20 transition-colors"
+                  className="flex items-center gap-2 px-6 py-3 bg-white text-black text-sm font-bold rounded-sm hover:bg-white/90 transition-colors"
                 >
-                  <Info size={16} />
-                  Más información
+                  <Play size={16} className="fill-black" />
+                  Reproducir
                 </button>
               </div>
 

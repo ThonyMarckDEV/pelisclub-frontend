@@ -34,6 +34,9 @@ import ListarPeliculas from 'pages/pelicula/Index';
 import AgregarPelicula from 'pages/pelicula/Store';
 import EditarPelicula from 'pages/pelicula/Update';
 
+// UI VIDEO
+import GestionVideo from 'pages/video/Gestion'; 
+
 
 // SETTINGS
 import ListarRoles from 'pages/rol/Index';
@@ -74,6 +77,9 @@ function AppContent() {
         <Route path="/pelicula/listar" element={<ProtectedRoute requiredPermission="pelicula.index" element={<ListarPeliculas />} />} />
         <Route path="/pelicula/agregar" element={<ProtectedRoute requiredPermission="pelicula.store" element={<AgregarPelicula />} />} />
         <Route path="/pelicula/editar/:id" element={<ProtectedRoute requiredPermission="pelicula.update" element={<EditarPelicula />} />} />
+
+        {/* VIDEO */}
+        <Route path="/video/gestionar" element={<ProtectedRoute requiredPermission="video.index" element={<GestionVideo />} />} />
 
       </Route>
 

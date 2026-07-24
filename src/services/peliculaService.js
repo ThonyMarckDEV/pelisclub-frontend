@@ -50,3 +50,9 @@ export const cambiarEstado = async (id, estado) => {
     });
     return handleResponse(response);
 };
+
+export const combobox = async (search = '') => {
+    const params = new URLSearchParams({ search });
+    const response = await fetchWithAuth(`${BASE_URL}/combobox?${params.toString()}`, { method: 'GET' });
+    return handleResponse(response);
+};

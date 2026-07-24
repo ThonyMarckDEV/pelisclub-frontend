@@ -40,3 +40,5 @@ export const showPelicula = async (slug) => {
     });
     return handleResponse(response);
 };
+
+export const linkVideo = (token) => `${BASE_URL}/ir/${token}`;

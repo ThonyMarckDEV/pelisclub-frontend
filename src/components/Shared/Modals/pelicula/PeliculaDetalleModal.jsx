@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { X, Star, Clock, Film, Lock } from "lucide-react";
+import { X, Play, Star, Clock, Film } from "lucide-react";
 import { showPelicula } from "services/publicoService";
+import VideoOpcionesModal from "components/Shared/Modals/pelicula/VideoOpcionesModal";
 
 const getYoutubeEmbed = (url) => {
     if (!url) return null;
@@ -12,6 +13,7 @@ const PeliculaDetalleModal = ({ slug, onClose }) => {
     const [pelicula, setPelicula] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
+    const [showOpciones, setShowOpciones] = useState(false);
 
     useEffect(() => {
         const load = async () => {
@@ -36,12 +38,16 @@ const PeliculaDetalleModal = ({ slug, onClose }) => {
 
     const embedUrl = getYoutubeEmbed(pelicula?.trailer_url);
 
+    const tieneOpciones =
+        (pelicula?.videos_reproduccion?.length || 0) > 0 ||
+        (pelicula?.videos_descarga?.length || 0) > 0;
+
     return (
         <>
-            {/* BACKDROP - fixed y separado del scroll, cubre pantalla completa siempre */}
+            {/* BACKDROP */}
             <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm" onClick={onClose} />
 
-            {/* CONTENEDOR SCROLLEABLE - solo mueve la card, no el fondo */}
+            {/* CONTENEDOR SCROLLEABLE */}
             <div className="fixed inset-0 z-50 overflow-y-auto flex items-start md:items-center justify-center p-0 md:p-4 pointer-events-none">
                 <div className="relative w-full md:max-w-2xl bg-[#0D0C0E] md:rounded-sm border border-white/10 shadow-2xl overflow-hidden my-0 md:my-8 pointer-events-auto">
                     <button
@@ -86,13 +92,7 @@ const PeliculaDetalleModal = ({ slug, onClose }) => {
 
                             {/* INFO */}
                             <div className="p-6">
-                                <div className="flex items-start justify-between gap-3 mb-2">
-                                    <h2 className="text-2xl font-black text-white">{pelicula.titulo}</h2>
-                                    <span className="shrink-0 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 bg-white/5 border border-white/10 text-white/40 rounded-sm">
-                                        <Lock size={11} />
-                                        Próximamente
-                                    </span>
-                                </div>
+                                <h2 className="text-2xl font-black text-white mb-2">{pelicula.titulo}</h2>
 
                                 <div className="flex flex-wrap items-center gap-3 text-xs text-white/50 font-semibold mb-4">
                                     {pelicula.anio_estreno && <span>{pelicula.anio_estreno}</span>}
@@ -128,7 +128,7 @@ const PeliculaDetalleModal = ({ slug, onClose }) => {
                                 )}
 
                                 {pelicula.actores?.length > 0 && (
-                                    <div>
+                                    <div className="mb-5">
                                         <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2.5">Reparto</p>
                                         <div className="flex flex-wrap gap-3">
                                             {pelicula.actores.map((actor, idx) => (
@@ -151,11 +151,34 @@ const PeliculaDetalleModal = ({ slug, onClose }) => {
                                         </div>
                                     </div>
                                 )}
+
+                                {tieneOpciones ? (
+                                    <button
+                                        onClick={() => setShowOpciones(true)}
+                                        className="w-full flex items-center justify-center gap-2 py-3 bg-[#E8B04B] text-black text-sm font-bold rounded-sm hover:bg-[#f0c06a] transition-colors"
+                                    >
+                                        <Play size={16} className="fill-black" />
+                                        Reproducir
+                                    </button>
+                                ) : (
+                                    <div className="w-full text-center py-3 bg-white/5 border border-white/10 text-white/30 text-xs font-semibold rounded-sm">
+                                        Video no disponible todavía
+                                    </div>
+                                )}
                             </div>
                         </>
                     )}
                 </div>
             </div>
+
+            {showOpciones && pelicula && (
+                <VideoOpcionesModal
+                    titulo={pelicula.titulo}
+                    videosReproduccion={pelicula.videos_reproduccion}
+                    videosDescarga={pelicula.videos_descarga}
+                    onClose={() => setShowOpciones(false)}
+                />
+            )}
         </>
     );
 };

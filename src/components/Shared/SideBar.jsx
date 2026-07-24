@@ -7,6 +7,7 @@ import {
     ArrowRightOnRectangleIcon,
     HomeIcon,
     CubeIcon,
+    VideoCameraIcon,
 } from '@heroicons/react/24/outline';
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 import { Settings, Film, TagIcon, Users } from 'lucide-react';
@@ -47,6 +48,10 @@ const MENU_GROUPS = [
                     { name: 'Listar', link: '/actor/listar', requiredPermission: 'actor.index' },
                     { name: 'Agregar', link: '/actor/agregar', requiredPermission: 'actor.store' },
                 ],
+            },
+            {
+                section: 'Videos', icon: VideoCameraIcon, // o Video de lucide-react
+                link: '/video/gestionar', requiredPermission: 'video.index'
             },
         ]
     },
