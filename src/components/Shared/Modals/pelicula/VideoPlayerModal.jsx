@@ -13,7 +13,6 @@ const useIsMobile = () => {
     return isMobile;
 };
 
-// Detecta la orientación FÍSICA real del dispositivo, independiente de si el lock funcionó o no
 const useOrientation = () => {
     const [esVertical, setEsVertical] = useState(false);
     useEffect(() => {
@@ -109,8 +108,6 @@ const VideoPlayerModal = ({ token, servidor, titulo, linkVideo, onClose }) => {
 
     useEffect(() => () => { if (hideControlsTimer.current) clearTimeout(hideControlsTimer.current); }, []);
 
-    // El aviso solo tiene sentido en móvil, mientras el dispositivo siga físicamente en vertical
-    // (independiente de si el screen.orientation.lock funcionó o no — por eso se detecta aparte)
     const mostrarAvisoRotar = isMobile && esVertical;
 
     return (
@@ -130,10 +127,10 @@ const VideoPlayerModal = ({ token, servidor, titulo, linkVideo, onClose }) => {
                         <CinemaScene3D lucesApagadas={lucesApagadas} encendido={confirmado} />
                     )}
 
-                    {/* HEADER */}
+                    {/* HEADER — ya no se oculta ni se traslada, solo se atenúa la opacidad. Sigue siendo clicable siempre */}
                     <div
-                        className={`absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-3 md:px-4 py-2.5 md:py-3 bg-gradient-to-b from-black/80 to-transparent transition-all duration-500 ${
-                            lucesApagadas && !mostrarControles ? "opacity-0 -translate-y-4 pointer-events-none" : "opacity-100 translate-y-0"
+                        className={`absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-3 md:px-4 py-2.5 md:py-3 bg-gradient-to-b from-black/80 to-transparent transition-opacity duration-500 ${
+                            lucesApagadas && !mostrarControles ? "opacity-30" : "opacity-100"
                         }`}
                     >
                         <div className="flex flex-col min-w-0 pr-2">
@@ -144,14 +141,16 @@ const VideoPlayerModal = ({ token, servidor, titulo, linkVideo, onClose }) => {
                         <div className="flex items-center gap-0.5 md:gap-1 shrink-0">
                             <button
                                 onClick={() => setModoCine((v) => !v)}
-                                className="h-8 w-8 flex items-center justify-center text-white/70 hover:text-[#E8B04B] hover:bg-white/10 rounded-full transition-colors"
+                                disabled={mostrarAvisoRotar}
+                                className="h-8 w-8 flex items-center justify-center text-white/70 hover:text-[#E8B04B] hover:bg-white/10 rounded-full transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-white/70 disabled:cursor-not-allowed"
                                 title={modoCine ? "Quitar sala de cine" : "Mostrar sala de cine"}
                             >
                                 {modoCine ? <MonitorPlay size={16} /> : <Clapperboard size={16} />}
                             </button>
                             <button
                                 onClick={() => setLucesApagadas((v) => !v)}
-                                className="h-8 w-8 flex items-center justify-center text-white/70 hover:text-[#E8B04B] hover:bg-white/10 rounded-full transition-colors"
+                                disabled={mostrarAvisoRotar}
+                                className="h-8 w-8 flex items-center justify-center text-white/70 hover:text-[#E8B04B] hover:bg-white/10 rounded-full transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-white/70 disabled:cursor-not-allowed"
                                 title={lucesApagadas ? "Encender luces" : "Apagar luces"}
                             >
                                 {lucesApagadas ? <LightbulbOff size={16} /> : <Lightbulb size={16} />}
@@ -167,6 +166,7 @@ const VideoPlayerModal = ({ token, servidor, titulo, linkVideo, onClose }) => {
                                 </button>
                             )}
 
+                            {/* La X siempre queda habilitada, incluso con el aviso de rotar visible */}
                             <button
                                 onClick={handleClose}
                                 className="h-8 w-8 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-colors"
@@ -210,8 +210,8 @@ const VideoPlayerModal = ({ token, servidor, titulo, linkVideo, onClose }) => {
 
                     {/* AVISO EXTERNO SERVIDOR */}
                     <div
-                        className={`absolute bottom-0 left-0 right-0 z-30 flex items-start gap-2 px-3 md:px-4 py-2 md:py-2.5 bg-gradient-to-t from-black/90 to-transparent transition-all duration-500 ${
-                            lucesApagadas && !mostrarControles ? "opacity-0 translate-y-4 pointer-events-none" : "opacity-100 translate-y-0"
+                        className={`absolute bottom-0 left-0 right-0 z-30 flex items-start gap-2 px-3 md:px-4 py-2 md:py-2.5 bg-gradient-to-t from-black/90 to-transparent transition-opacity duration-500 ${
+                            lucesApagadas && !mostrarControles ? "opacity-30" : "opacity-100"
                         }`}
                     >
                         <ShieldAlert size={12} className="text-white/25 shrink-0 mt-0.5" />
@@ -220,9 +220,9 @@ const VideoPlayerModal = ({ token, servidor, titulo, linkVideo, onClose }) => {
                         </p>
                     </div>
 
-                    {/* POPUP: gira tu dispositivo — solo móvil, solo mientras siga en vertical */}
+                    {/* POPUP: gira tu dispositivo — solo bloquea visualmente, la X del header sigue tocable por encima (z-30 > z-40 no, corregido abajo) */}
                     <div
-                        className={`absolute inset-0 z-40 flex flex-col items-center justify-center gap-4 bg-black/92 backdrop-blur-sm transition-opacity duration-500 ${
+                        className={`absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-black/92 backdrop-blur-sm transition-opacity duration-500 ${
                             mostrarAvisoRotar ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
                         }`}
                     >
