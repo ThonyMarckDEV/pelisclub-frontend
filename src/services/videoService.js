@@ -36,3 +36,8 @@ export const toggleActivo = async (id) => {
     const response = await fetchWithAuth(`${BASE_URL}/toggle/${id}`, { method: 'PATCH' });
     return handleResponse(response);
 };
+
+export const indexPorEpisodio = async (episodioId) => {
+    const response = await fetchWithAuth(`${BASE_URL}/episodio/${episodioId}`, { method: 'GET' });
+    return handleResponse(response);
+};

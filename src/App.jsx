@@ -37,6 +37,12 @@ import EditarPelicula from 'pages/pelicula/Update';
 // UI VIDEO
 import GestionVideo from 'pages/video/Gestion'; 
 
+import ListarSeries from 'pages/serie/Index';
+import AgregarSerie from 'pages/serie/Store';
+import EditarSerie from 'pages/serie/Update';
+
+import GestionTemporadas from 'pages/temporada/Gestion';
+
 // UI LEGAL
 import PoliticaPrivacidad from 'pages/legal/PoliticaPrivacidad';
 import Terminos from 'pages/legal/Terminos';
@@ -82,6 +88,14 @@ function AppContent() {
         <Route path="/pelicula/listar" element={<ProtectedRoute requiredPermission="pelicula.index" element={<ListarPeliculas />} />} />
         <Route path="/pelicula/agregar" element={<ProtectedRoute requiredPermission="pelicula.store" element={<AgregarPelicula />} />} />
         <Route path="/pelicula/editar/:id" element={<ProtectedRoute requiredPermission="pelicula.update" element={<EditarPelicula />} />} />
+
+        {/* SERIES */}
+        <Route path="/serie/listar" element={<ProtectedRoute requiredPermission="serie.index" element={<ListarSeries />} />} />
+        <Route path="/serie/agregar" element={<ProtectedRoute requiredPermission="serie.store" element={<AgregarSerie />} />} />
+        <Route path="/serie/editar/:id" element={<ProtectedRoute requiredPermission="serie.update" element={<EditarSerie />} />} />
+
+        {/* TEMPORADAS */}
+        <Route path="/temporada/gestionar" element={<ProtectedRoute requiredPermission="temporada.index" element={<GestionTemporadas />} />} />
 
         {/* VIDEO */}
         <Route path="/video/gestionar" element={<ProtectedRoute requiredPermission="video.index" element={<GestionVideo />} />} />

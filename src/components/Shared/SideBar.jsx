@@ -8,9 +8,10 @@ import {
     HomeIcon,
     CubeIcon,
     VideoCameraIcon,
+    RectangleStackIcon,
 } from '@heroicons/react/24/outline';
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
-import { Settings, Film, TagIcon, Users } from 'lucide-react';
+import { Settings, Film, TagIcon, Users, Tv } from 'lucide-react';
 import { useAuth } from 'context/AuthContext';
 import logo from 'assets/img/logo.png';
 
@@ -36,6 +37,21 @@ const MENU_GROUPS = [
                 ],
             },
             {
+                section: 'Series', icon: Tv, // desde lucide-react
+                subs: [
+                    { name: 'Listar', link: '/serie/listar', requiredPermission: 'serie.index' },
+                    { name: 'Agregar', link: '/serie/agregar', requiredPermission: 'serie.store' },
+                ],
+            },
+            {
+                section: 'Temporadas y Episodios', icon: RectangleStackIcon,
+                link: '/temporada/gestionar', requiredPermission: 'temporada.index'
+            },
+            {
+                section: 'Videos', icon: VideoCameraIcon, // o Video de lucide-react
+                link: '/video/gestionar', requiredPermission: 'video.index'
+            },
+            {
                 section: 'Géneros', icon: TagIcon,
                 subs: [
                     { name: 'Listar', link: '/genero/listar', requiredPermission: 'genero.index' },
@@ -48,11 +64,7 @@ const MENU_GROUPS = [
                     { name: 'Listar', link: '/actor/listar', requiredPermission: 'actor.index' },
                     { name: 'Agregar', link: '/actor/agregar', requiredPermission: 'actor.store' },
                 ],
-            },
-            {
-                section: 'Videos', icon: VideoCameraIcon, // o Video de lucide-react
-                link: '/video/gestionar', requiredPermission: 'video.index'
-            },
+            }
         ]
     },
     {

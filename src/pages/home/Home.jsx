@@ -1,12 +1,19 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Play, Star, Film, X } from "lucide-react";
-import { peliculas as fetchPeliculas, destacada as fetchDestacada } from "services/publicoService";
+import { Play, Star, Film, Tv, X } from "lucide-react";
+import { peliculas as fetchPeliculas, destacada as fetchDestacada, series as fetchSeries } from "services/publicoService";
 import PeliculaDetalleModal from "components/Shared/Modals/pelicula/PeliculaDetalleModal";
+import SerieDetalleModal from "components/Shared/Modals/serie/SerieDetalleModal";
 import MovieCard from "./MovieCard";
 import Footer from "./Footer";
 import CatalogoSearch from "./CatalogoSearch";
 import InstallAppButton from "components/Shared/InstallAppButton";
+
+const TIPOS = [
+  { value: "", label: "Todo" },
+  { value: "pelicula", label: "Películas" },
+  { value: "serie", label: "Series" },
+];
 
 const Home = () => {
   const [searchParams] = useSearchParams();
@@ -16,12 +23,21 @@ const Home = () => {
   const filtroTipo = searchParams.get("filtro") || "";
   const searchTerm = searchParams.get("search") || "";
   const peliculaSlug = searchParams.get("pelicula") || "";
+  const serieSlugParam = searchParams.get("serie") || "";
+  const tipoContenido = searchParams.get("tipo") || ""; // '', 'pelicula', 'serie'
 
   const [featured, setFeatured] = useState(null);
   const [catalogo, setCatalogo] = useState([]);
   const [loadingFeatured, setLoadingFeatured] = useState(true);
   const [loadingCatalogo, setLoadingCatalogo] = useState(true);
   const [slugAbierto, setSlugAbierto] = useState(null);
+
+  const [seriesCatalogo, setSeriesCatalogo] = useState([]);
+  const [loadingSeries, setLoadingSeries] = useState(true);
+  const [serieSlugAbierto, setSerieSlugAbierto] = useState(null);
+
+  const mostrarPeliculas = tipoContenido === "" || tipoContenido === "pelicula";
+  const mostrarSeries = tipoContenido === "" || tipoContenido === "serie";
 
   useEffect(() => {
     const loadFeatured = async () => {
@@ -39,6 +55,11 @@ const Home = () => {
   }, []);
 
   const loadCatalogo = useCallback(async () => {
+    if (!mostrarPeliculas) {
+      setCatalogo([]);
+      setLoadingCatalogo(false);
+      return;
+    }
     setLoadingCatalogo(true);
     try {
       const response = await fetchPeliculas(1, { genero: generoSlug, filtro: filtroTipo, search: searchTerm });
@@ -48,17 +69,44 @@ const Home = () => {
     } finally {
       setLoadingCatalogo(false);
     }
-  }, [generoSlug, filtroTipo, searchTerm]);
+  }, [generoSlug, filtroTipo, searchTerm, mostrarPeliculas]);
 
   useEffect(() => {
     loadCatalogo();
   }, [loadCatalogo]);
+
+  const loadSeries = useCallback(async () => {
+    if (!mostrarSeries) {
+      setSeriesCatalogo([]);
+      setLoadingSeries(false);
+      return;
+    }
+    setLoadingSeries(true);
+    try {
+      const response = await fetchSeries(1, { genero: generoSlug, search: searchTerm });
+      setSeriesCatalogo(response.data || []);
+    } catch (error) {
+      setSeriesCatalogo([]);
+    } finally {
+      setLoadingSeries(false);
+    }
+  }, [generoSlug, searchTerm, mostrarSeries]);
+
+  useEffect(() => {
+    loadSeries();
+  }, [loadSeries]);
 
   useEffect(() => {
     if (peliculaSlug) {
       setSlugAbierto(peliculaSlug);
     }
   }, [peliculaSlug]);
+
+  useEffect(() => {
+    if (serieSlugParam) {
+      setSerieSlugAbierto(serieSlugParam);
+    }
+  }, [serieSlugParam]);
 
   // Actualiza ?search= en la URL sin tocar los demás filtros
   const buscarPorNombre = useCallback((texto) => {
@@ -70,6 +118,19 @@ const Home = () => {
       params.delete("filtro");
     } else {
       params.delete("search");
+    }
+
+    navigate(`/?${params.toString()}`, { replace: true });
+  }, [searchParams, navigate]);
+
+  // Cambia el tipo de contenido a filtrar (Todo/Películas/Series), preservando búsqueda y género
+  const cambiarTipo = useCallback((tipo) => {
+    const params = new URLSearchParams(searchParams);
+
+    if (tipo) {
+      params.set("tipo", tipo);
+    } else {
+      params.delete("tipo");
     }
 
     navigate(`/?${params.toString()}`, { replace: true });
@@ -88,6 +149,13 @@ const Home = () => {
   const cerrarModal = () => {
     setSlugAbierto(null);
     if (peliculaSlug) {
+      navigate("/", { replace: true });
+    }
+  };
+
+  const cerrarModalSerie = () => {
+    setSerieSlugAbierto(null);
+    if (serieSlugParam) {
       navigate("/", { replace: true });
     }
   };
@@ -166,10 +234,9 @@ const Home = () => {
         </div>
       </section>
 
-      {/* CATALOGO */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12 flex-1 w-full">
+      {/* BARRA DE FILTROS Y BUSCADOR */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-12 w-full">
 
-        {/* FILTRO ACTIVO */}
         {filtroActivo && (
           <div className="flex items-center gap-2 mb-4">
             <span className="text-[10px] font-bold uppercase tracking-widest text-white/30">
@@ -188,38 +255,98 @@ const Home = () => {
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
-          <h2 className="text-white font-black text-lg uppercase tracking-wide capitalize">
-            {tituloCatalogo}
-          </h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          {/* SWITCH TODO / PELICULAS / SERIES */}
+          <div className="flex items-center gap-2 bg-white/5 rounded-sm p-1 w-fit">
+            {TIPOS.map((t) => (
+              <button
+                key={t.value}
+                onClick={() => cambiarTipo(t.value)}
+                className={`px-4 py-1.5 text-xs font-bold uppercase tracking-wide rounded-sm transition-colors ${
+                  tipoContenido === t.value
+                    ? "bg-[#E8B04B] text-black"
+                    : "text-white/50 hover:text-white/80"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
 
           <CatalogoSearch valorInicial={searchTerm} onBuscar={buscarPorNombre} />
         </div>
-
-        {loadingCatalogo ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="aspect-[2/3] rounded-sm bg-white/5 animate-pulse" />
-            ))}
-          </div>
-        ) : catalogo.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-            {catalogo.map((p) => (
-              <MovieCard key={p.id} pelicula={p} onOpen={setSlugAbierto} />
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-16 text-white/30 gap-2">
-            <Film size={32} />
-            <p className="text-sm font-semibold">No hay películas en esta categoría todavía.</p>
-          </div>
-        )}
       </section>
+
+      {/* CATALOGO PELICULAS */}
+      {mostrarPeliculas && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-12 w-full">
+          <h2 className="text-white font-black text-lg uppercase tracking-wide capitalize mb-5 flex items-center gap-2">
+            <Film size={18} className="text-[#E8B04B]" />
+            {tipoContenido === "pelicula" ? tituloCatalogo : "Películas"}
+          </h2>
+
+          {loadingCatalogo ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="aspect-[2/3] rounded-sm bg-white/5 animate-pulse" />
+              ))}
+            </div>
+          ) : catalogo.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+              {catalogo.map((p) => (
+                <MovieCard key={p.id} pelicula={p} onOpen={setSlugAbierto} />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 text-white/30 gap-2">
+              <Film size={32} />
+              <p className="text-sm font-semibold">No hay películas en esta categoría todavía.</p>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* CATALOGO SERIES */}
+      {mostrarSeries && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-12 flex-1 w-full">
+          <h2 className="text-white font-black text-lg uppercase tracking-wide mb-5 flex items-center gap-2">
+            <Tv size={18} className="text-[#E8B04B]" />
+            {tipoContenido === "serie" ? tituloCatalogo : "Series"}
+          </h2>
+
+          {loadingSeries ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="aspect-[2/3] rounded-sm bg-white/5 animate-pulse" />
+              ))}
+            </div>
+          ) : seriesCatalogo.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+              {seriesCatalogo.map((s) => (
+                <MovieCard
+                  key={s.id}
+                  pelicula={{ ...s, anio_estreno: s.anio_inicio }}
+                  onOpen={setSerieSlugAbierto}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 text-white/30 gap-2">
+              <Tv size={32} />
+              <p className="text-sm font-semibold">No hay series en esta categoría todavía.</p>
+            </div>
+          )}
+        </section>
+      )}
 
       <Footer />
 
       {slugAbierto && (
         <PeliculaDetalleModal slug={slugAbierto} onClose={cerrarModal} />
+      )}
+
+      {serieSlugAbierto && (
+        <SerieDetalleModal slug={serieSlugAbierto} onClose={cerrarModalSerie} />
       )}
     </div>
   );

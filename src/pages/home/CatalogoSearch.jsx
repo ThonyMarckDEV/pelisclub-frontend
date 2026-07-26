@@ -31,7 +31,7 @@ const CatalogoSearch = ({ valorInicial, onBuscar }) => {
         type="text"
         value={texto}
         onChange={(e) => setTexto(e.target.value)}
-        placeholder="Buscar película por nombre..."
+        placeholder="Buscar películas o series..."
         className="w-full bg-[#141215] border border-white/10 rounded-sm pl-9 pr-8 py-2 text-white text-xs font-medium placeholder:text-white/30 focus:outline-none focus:border-[#E8B04B]/50 transition-colors"
       />
       {texto && (

@@ -1,22 +1,25 @@
 import React from 'react';
 import { useGestion } from 'hooks/video/useGestion';
 import PeliculaSearchSelect from 'components/Shared/Comboboxes/PeliculaMultiSelect';
+import EpisodioSearchSelect from 'components/Shared/Comboboxes/EpisodioSearchSelect';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 import {
     LinkIcon, PlayCircleIcon, ArrowDownTrayIcon, StarIcon,
-    PencilSquareIcon, TrashIcon, EyeIcon, EyeSlashIcon, VideoCameraIcon
+    PencilSquareIcon, TrashIcon, EyeIcon, EyeSlashIcon, VideoCameraIcon, FilmIcon, TvIcon
 } from '@heroicons/react/24/outline';
 
 const CALIDADES = ['SD', 'HD', 'FHD', '4K'];
 
 const Gestion = () => {
     const {
-        pelicula, videos, loading, alert, setAlert,
+        tipoContenido, handleChangeTipoContenido,
+        contenidoActual,
+        videos, loading, alert, setAlert,
         formData, editingId, saving,
         showConfirm, setShowConfirm, setIdToDelete,
-        handleSelectPelicula, handleFormChange, handleEdit, handleCancelEdit,
+        handleSelectPelicula, handleSelectEpisodio, handleFormChange, handleEdit, handleCancelEdit,
         handleSubmit, handleAskDelete, handleConfirmDelete, handleToggleActivo,
     } = useGestion();
 
@@ -29,15 +32,43 @@ const Gestion = () => {
 
             <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
 
-            {/* SELECTOR DE PELICULA */}
-            <div className="bg-[#0D0C0E] p-6 rounded-sm border border-white/10 mb-6">
-                <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">
-                    Selecciona la película
-                </label>
-                <PeliculaSearchSelect selected={pelicula} onSelect={handleSelectPelicula} />
+            {/* SWITCH TIPO DE CONTENIDO + SELECTOR */}
+            <div className="bg-[#0D0C0E] p-6 rounded-sm border border-white/10 mb-6 space-y-4">
+                <div className="flex items-center gap-2 bg-white/5 rounded-sm p-1 w-fit">
+                    <button
+                        type="button"
+                        onClick={() => handleChangeTipoContenido('pelicula')}
+                        className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold uppercase rounded-sm transition-colors ${
+                            tipoContenido === 'pelicula' ? 'bg-[#E8B04B] text-black' : 'text-white/50 hover:text-white/80'
+                        }`}
+                    >
+                        <FilmIcon className="w-3.5 h-3.5" /> Película
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => handleChangeTipoContenido('episodio')}
+                        className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold uppercase rounded-sm transition-colors ${
+                            tipoContenido === 'episodio' ? 'bg-[#E8B04B] text-black' : 'text-white/50 hover:text-white/80'
+                        }`}
+                    >
+                        <TvIcon className="w-3.5 h-3.5" /> Episodio
+                    </button>
+                </div>
+
+                <div>
+                    <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">
+                        {tipoContenido === 'pelicula' ? 'Selecciona la película' : 'Selecciona el episodio'}
+                    </label>
+
+                    {tipoContenido === 'pelicula' ? (
+                        <PeliculaSearchSelect selected={contenidoActual} onSelect={handleSelectPelicula} />
+                    ) : (
+                        <EpisodioSearchSelect selected={contenidoActual} onSelect={handleSelectEpisodio} />
+                    )}
+                </div>
             </div>
 
-            {pelicula && (
+            {contenidoActual && (
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
                     {/* FORM */}

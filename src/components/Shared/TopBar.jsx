@@ -1,16 +1,16 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronDown, LogOut, ShieldCheck, Search, Menu, X, Film } from "lucide-react";
+import { ChevronDown, LogOut, ShieldCheck, Search, Menu, X, Film, Tv } from "lucide-react";
 import { useAuth } from "context/AuthContext";
 import LoginModal from "components/Shared/Modals/Auth/LoginModal";
-import { generos as fetchGeneros, peliculas as fetchPeliculas } from "services/publicoService";
+import { generos as fetchGeneros, peliculas as fetchPeliculas, series as fetchSeries } from "services/publicoService";
 import logo from "assets/img/logo.png";
 
 const CATALOGO = [
   { nombre: "Estrenos", slug: "estrenos" },
   { nombre: "Más vistos", slug: "mas-vistos" },
   { nombre: "Mejor calificados", slug: "mejor-calificados" },
-  { nombre: "Todos las películas", slug: "todos" },
+  { nombre: "Todo el contenido", slug: "todos" },
 ];
 
 const HoverDropdown = ({ label, items, onSelect }) => {
@@ -57,7 +57,7 @@ const HoverDropdown = ({ label, items, onSelect }) => {
   );
 };
 
-const SearchBox = ({ onNavigateSearch, onSelectPelicula }) => {
+const SearchBox = ({ onNavigateSearch, onSelectItem }) => {
   const [open, setOpen] = useState(false);
   const [term, setTerm] = useState("");
   const [suggestions, setSuggestions] = useState([]);
@@ -92,8 +92,23 @@ const SearchBox = ({ onNavigateSearch, onSelectPelicula }) => {
     }
     setLoading(true);
     try {
-      const response = await fetchPeliculas(1, { search: value });
-      setSuggestions((response.data || []).slice(0, 5));
+      const [resPeliculas, resSeries] = await Promise.all([
+        fetchPeliculas(1, { search: value }),
+        fetchSeries(1, { search: value }),
+      ]);
+
+      const peliculas = (resPeliculas.data || []).map((p) => ({ ...p, tipo: "pelicula" }));
+      const series = (resSeries.data || []).map((s) => ({ ...s, tipo: "serie", anio_estreno: s.anio_inicio }));
+
+      // Mezcla y limita a 6 resultados totales, priorizando alternar entre ambos tipos
+      const combinados = [];
+      const max = Math.max(peliculas.length, series.length);
+      for (let i = 0; i < max && combinados.length < 6; i++) {
+        if (peliculas[i]) combinados.push(peliculas[i]);
+        if (series[i] && combinados.length < 6) combinados.push(series[i]);
+      }
+
+      setSuggestions(combinados);
     } catch (error) {
       setSuggestions([]);
     } finally {
@@ -118,8 +133,8 @@ const SearchBox = ({ onNavigateSearch, onSelectPelicula }) => {
     }
   };
 
-  const handleSelect = (pelicula) => {
-    onSelectPelicula(pelicula.slug);
+  const handleSelect = (item) => {
+    onSelectItem(item);
     setOpen(false);
   };
 
@@ -144,7 +159,7 @@ const SearchBox = ({ onNavigateSearch, onSelectPelicula }) => {
                 value={term}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
-                placeholder="Buscar película..."
+                placeholder="Buscar películas o series..."
                 className="w-full bg-transparent text-sm text-white placeholder-white/30 outline-none"
               />
               {loading && (
@@ -155,24 +170,27 @@ const SearchBox = ({ onNavigateSearch, onSelectPelicula }) => {
             {term.trim() && (
               <div className="max-h-72 overflow-y-auto">
                 {suggestions.length > 0 ? (
-                  suggestions.map((p) => (
+                  suggestions.map((item) => (
                     <button
-                      key={p.id}
-                      onClick={() => handleSelect(p)}
+                      key={`${item.tipo}-${item.id}`}
+                      onClick={() => handleSelect(item)}
                       className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 transition-colors text-left"
                     >
-                      <div className="w-8 h-11 rounded-sm bg-black border border-white/10 overflow-hidden shrink-0">
-                        {p.portada_url ? (
-                          <img src={p.portada_url} alt={p.titulo} className="w-full h-full object-cover" />
+                      <div className="relative w-8 h-11 rounded-sm bg-black border border-white/10 overflow-hidden shrink-0">
+                        {item.portada_url ? (
+                          <img src={item.portada_url} alt={item.titulo} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <Film size={12} className="text-white/20" />
+                            {item.tipo === "serie" ? <Tv size={12} className="text-white/20" /> : <Film size={12} className="text-white/20" />}
                           </div>
                         )}
                       </div>
                       <div className="flex flex-col min-w-0">
-                        <span className="text-xs font-bold text-white truncate">{p.titulo}</span>
-                        <span className="text-[10px] text-white/40">{p.anio_estreno}</span>
+                        <span className="text-xs font-bold text-white truncate">{item.titulo}</span>
+                        <span className="flex items-center gap-1 text-[10px] text-white/40">
+                          {item.tipo === "serie" ? <Tv size={10} /> : <Film size={10} />}
+                          {item.anio_estreno}
+                        </span>
                       </div>
                     </button>
                   ))
@@ -230,6 +248,16 @@ const TopBar = () => {
   const irACatalogo = (slug) => navigate(`/?filtro=${slug}`);
   const irABusqueda = (term) => navigate(`/?search=${encodeURIComponent(term)}`);
   const irAPelicula = (slug) => navigate(`/?pelicula=${slug}`);
+  const irASerie = (slug) => navigate(`/?serie=${slug}`);
+
+  // Enruta al modal correcto según el tipo de resultado elegido en el buscador
+  const handleSelectItem = (item) => {
+    if (item.tipo === "serie") {
+      irASerie(item.slug);
+    } else {
+      irAPelicula(item.slug);
+    }
+  };
 
   const handleMobileSearchSubmit = (e) => {
     e.preventDefault();
@@ -268,7 +296,7 @@ const TopBar = () => {
           </nav>
 
           <div className="flex items-center gap-3">
-            <SearchBox onNavigateSearch={irABusqueda} onSelectPelicula={irAPelicula} />
+            <SearchBox onNavigateSearch={irABusqueda} onSelectItem={handleSelectItem} />
 
             {isAuthenticated ? (
               <div className="relative" ref={menuRef}>
@@ -354,7 +382,7 @@ const TopBar = () => {
                 type="text"
                 value={mobileSearch}
                 onChange={(e) => setMobileSearch(e.target.value)}
-                placeholder="Buscar película..."
+                placeholder="Buscar películas o series..."
                 className="w-full bg-transparent text-sm text-white placeholder-white/30 outline-none"
               />
             </form>
