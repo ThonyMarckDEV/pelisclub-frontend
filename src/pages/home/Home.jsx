@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Play, Star, Film, Tv, X } from "lucide-react";
+import { Play, Star, Film, Tv, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { peliculas as fetchPeliculas, destacada as fetchDestacada, series as fetchSeries } from "services/publicoService";
 import PeliculaDetalleModal from "components/Shared/Modals/pelicula/PeliculaDetalleModal";
 import SerieDetalleModal from "components/Shared/Modals/serie/SerieDetalleModal";
@@ -15,6 +15,8 @@ const TIPOS = [
   { value: "serie", label: "Series" },
 ];
 
+const INTERVALO_CARRUSEL = 7000; // ms entre cambios automáticos
+
 const Home = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -24,11 +26,13 @@ const Home = () => {
   const searchTerm = searchParams.get("search") || "";
   const peliculaSlug = searchParams.get("pelicula") || "";
   const serieSlugParam = searchParams.get("serie") || "";
-  const tipoContenido = searchParams.get("tipo") || ""; // '', 'pelicula', 'serie'
+  const tipoContenido = searchParams.get("tipo") || "";
 
-  const [featured, setFeatured] = useState(null);
-  const [catalogo, setCatalogo] = useState([]);
+  const [destacados, setDestacados] = useState([]);
+  const [indiceActivo, setIndiceActivo] = useState(0);
   const [loadingFeatured, setLoadingFeatured] = useState(true);
+
+  const [catalogo, setCatalogo] = useState([]);
   const [loadingCatalogo, setLoadingCatalogo] = useState(true);
   const [slugAbierto, setSlugAbierto] = useState(null);
 
@@ -39,20 +43,49 @@ const Home = () => {
   const mostrarPeliculas = tipoContenido === "" || tipoContenido === "pelicula";
   const mostrarSeries = tipoContenido === "" || tipoContenido === "serie";
 
+  const timerRef = useRef(null);
+  const featured = destacados[indiceActivo] || null;
+
   useEffect(() => {
     const loadFeatured = async () => {
       setLoadingFeatured(true);
       try {
         const response = await fetchDestacada();
-        setFeatured(response.data || null);
+        setDestacados(response.data || []);
+        setIndiceActivo(0);
       } catch (error) {
-        setFeatured(null);
+        setDestacados([]);
       } finally {
         setLoadingFeatured(false);
       }
     };
     loadFeatured();
   }, []);
+
+  // Auto-avance del carrusel, se reinicia cada vez que cambia manualmente el índice
+  useEffect(() => {
+    if (destacados.length <= 1) return;
+
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setIndiceActivo((prev) => (prev + 1) % destacados.length);
+    }, INTERVALO_CARRUSEL);
+
+    return () => clearInterval(timerRef.current);
+  }, [destacados, indiceActivo]);
+
+  const irASlide = (i) => setIndiceActivo(i);
+  const slideAnterior = () => setIndiceActivo((prev) => (prev - 1 + destacados.length) % destacados.length);
+  const slideSiguiente = () => setIndiceActivo((prev) => (prev + 1) % destacados.length);
+
+  const abrirDestacado = () => {
+    if (!featured) return;
+    if (featured.tipo === "serie") {
+      setSerieSlugAbierto(featured.slug);
+    } else {
+      setSlugAbierto(featured.slug);
+    }
+  };
 
   const loadCatalogo = useCallback(async () => {
     if (!mostrarPeliculas) {
@@ -108,10 +141,8 @@ const Home = () => {
     }
   }, [serieSlugParam]);
 
-  // Actualiza ?search= en la URL sin tocar los demás filtros
   const buscarPorNombre = useCallback((texto) => {
     const params = new URLSearchParams(searchParams);
-
     if (texto) {
       params.set("search", texto);
       params.delete("genero");
@@ -119,20 +150,16 @@ const Home = () => {
     } else {
       params.delete("search");
     }
-
     navigate(`/?${params.toString()}`, { replace: true });
   }, [searchParams, navigate]);
 
-  // Cambia el tipo de contenido a filtrar (Todo/Películas/Series), preservando búsqueda y género
   const cambiarTipo = useCallback((tipo) => {
     const params = new URLSearchParams(searchParams);
-
     if (tipo) {
       params.set("tipo", tipo);
     } else {
       params.delete("tipo");
     }
-
     navigate(`/?${params.toString()}`, { replace: true });
   }, [searchParams, navigate]);
 
@@ -148,60 +175,79 @@ const Home = () => {
 
   const cerrarModal = () => {
     setSlugAbierto(null);
-    if (peliculaSlug) {
-      navigate("/", { replace: true });
-    }
+    if (peliculaSlug) navigate("/", { replace: true });
   };
 
   const cerrarModalSerie = () => {
     setSerieSlugAbierto(null);
-    if (serieSlugParam) {
-      navigate("/", { replace: true });
-    }
+    if (serieSlugParam) navigate("/", { replace: true });
   };
 
   const tituloCatalogo = filtroActivo ? filtroActivo.valor : "Catálogo";
 
   return (
     <div className="bg-black min-h-screen flex flex-col">
-      {/* HERO */}
-      <section className="relative h-[70vh] min-h-[420px] w-full overflow-hidden">
-        <div className="absolute inset-0">
-          {featured?.banner_url ? (
-            <img
-              src={featured.banner_url}
-              alt={featured.titulo}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-[#2A0E10] via-[#17070A] to-black" />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/20 to-transparent" />
-        </div>
+      {/* HERO — CARRUSEL */}
+      <section className="relative h-[70vh] min-h-[420px] w-full overflow-hidden group/hero">
+        {loadingFeatured ? (
+          <div className="absolute inset-0 bg-gradient-to-br from-[#2A0E10] via-[#17070A] to-black" />
+        ) : featured ? (
+          <>
+            {/* Capas de fondo — todas montadas, solo se muestra la activa (crossfade) */}
+            {destacados.map((item, i) => (
+              <div
+                key={`${item.tipo}-${item.id}`}
+                className={`absolute inset-0 transition-opacity duration-1000 ${i === indiceActivo ? "opacity-100" : "opacity-0"}`}
+              >
+                {item.banner_url ? (
+                  <img src={item.banner_url} alt={item.titulo} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-[#2A0E10] via-[#17070A] to-black" />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20" />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/20 to-transparent" />
+              </div>
+            ))}
 
-        <div className="relative z-10 h-full max-w-7xl mx-auto px-4 sm:px-6 flex flex-col justify-end pb-16">
-          {loadingFeatured ? (
-            <div className="h-8 w-48 bg-white/5 rounded animate-pulse" />
-          ) : featured ? (
-            <>
-              <span className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#E8B04B] mb-3">
-                Película destacada
+            {/* Flechas — visibles solo con hover en desktop, si hay más de 1 destacado */}
+            {destacados.length > 1 && (
+              <>
+                <button
+                  onClick={slideAnterior}
+                  className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 z-20 h-10 w-10 items-center justify-center bg-black/40 hover:bg-black/70 text-white rounded-full opacity-0 group-hover/hero:opacity-100 transition-opacity"
+                  aria-label="Anterior"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <button
+                  onClick={slideSiguiente}
+                  className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 h-10 w-10 items-center justify-center bg-black/40 hover:bg-black/70 text-white rounded-full opacity-0 group-hover/hero:opacity-100 transition-opacity"
+                  aria-label="Siguiente"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </>
+            )}
+
+            <div className="relative z-10 h-full max-w-7xl mx-auto px-4 sm:px-6 flex flex-col justify-end pb-16">
+              <span className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#E8B04B] mb-3 flex items-center gap-2">
+                {featured.tipo === "serie" ? <Tv size={12} /> : <Film size={12} />}
+                {featured.tipo === "serie" ? "Serie destacada" : "Película destacada"}
               </span>
               <h1 className="text-4xl sm:text-5xl font-black text-white max-w-xl leading-tight mb-4">
                 {featured.titulo}
               </h1>
-              <p className="text-white/60 text-sm max-w-md mb-6 leading-relaxed">
+              <p className="text-white/60 text-sm max-w-md mb-6 leading-relaxed line-clamp-3">
                 {featured.sinopsis}
               </p>
 
               <div className="flex items-center gap-3">
                 <button
-                  onClick={() => setSlugAbierto(featured.slug)}
+                  onClick={abrirDestacado}
                   className="flex items-center gap-2 px-6 py-3 bg-white text-black text-sm font-bold rounded-sm hover:bg-white/90 transition-colors"
                 >
                   <Play size={16} className="fill-black" />
-                  Reproducir
+                  {featured.tipo === "serie" ? "Ver serie" : "Reproducir"}
                 </button>
                 <InstallAppButton />
               </div>
@@ -224,14 +270,32 @@ const Home = () => {
                   </>
                 )}
               </div>
-            </>
-          ) : (
+
+              {/* Indicadores de puntos */}
+              {destacados.length > 1 && (
+                <div className="flex items-center gap-2 mt-8">
+                  {destacados.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => irASlide(i)}
+                      className={`h-1.5 rounded-full transition-all ${
+                        i === indiceActivo ? "w-8 bg-[#E8B04B]" : "w-1.5 bg-white/30 hover:bg-white/50"
+                      }`}
+                      aria-label={`Ir al destacado ${i + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          <div className="relative z-10 h-full max-w-7xl mx-auto px-4 sm:px-6 flex flex-col justify-end pb-16">
             <div className="flex flex-col items-start gap-2 text-white/30">
               <Film size={40} />
-              <p className="text-sm font-semibold">Todavía no hay películas publicadas.</p>
+              <p className="text-sm font-semibold">Todavía no hay contenido publicado.</p>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </section>
 
       {/* BARRA DE FILTROS Y BUSCADOR */}
@@ -256,16 +320,13 @@ const Home = () => {
         )}
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          {/* SWITCH TODO / PELICULAS / SERIES */}
           <div className="flex items-center gap-2 bg-white/5 rounded-sm p-1 w-fit">
             {TIPOS.map((t) => (
               <button
                 key={t.value}
                 onClick={() => cambiarTipo(t.value)}
                 className={`px-4 py-1.5 text-xs font-bold uppercase tracking-wide rounded-sm transition-colors ${
-                  tipoContenido === t.value
-                    ? "bg-[#E8B04B] text-black"
-                    : "text-white/50 hover:text-white/80"
+                  tipoContenido === t.value ? "bg-[#E8B04B] text-black" : "text-white/50 hover:text-white/80"
                 }`}
               >
                 {t.label}
