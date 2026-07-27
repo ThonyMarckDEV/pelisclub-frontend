@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { X, Play, Star, Clock, Film } from "lucide-react";
+import { X, Play, Clock, Film } from "lucide-react";
 import { showPelicula } from "services/publicoService";
 import VideoOpcionesModal from "components/Shared/Modals/pelicula/VideoOpcionesModal";
 import ComentariosSection from "./ComentariosSection";
+import EstrellasCalificacion from "pages/calificacion/EstrellasCalificacion";
 
 const getYoutubeEmbed = (url) => {
     if (!url) return null;
@@ -142,11 +143,14 @@ const PeliculaDetalleModal = ({ slug, onClose }) => {
                                                     <span className="flex items-center gap-1"><Clock size={12} /> {pelicula.duracion_minutos} min</span>
                                                 )}
                                                 <span className="px-1.5 py-0.5 border border-white/20 rounded-sm text-[10px]">{pelicula.clasificacion}</span>
-                                                {pelicula.calificacion_promedio > 0 && (
-                                                    <span className="flex items-center gap-1">
-                                                        <Star size={12} className="fill-[#E8B04B] text-[#E8B04B]" /> {Number(pelicula.calificacion_promedio).toFixed(1)}
-                                                    </span>
-                                                )}
+                                            </div>
+
+                                            {/* CALIFICACIÓN — promedio + estrellas interactivas */}
+                                            <div className="mb-4">
+                                                <EstrellasCalificacion
+                                                    peliculaId={pelicula.id}
+                                                    promedio={pelicula.calificacion_promedio}
+                                                />
                                             </div>
 
                                             {pelicula.generos?.length > 0 && (
