@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { X, Play, ShieldAlert, Lightbulb, LightbulbOff, Clapperboard, MonitorPlay, Maximize, Minimize, RotateCw, ChevronRight, Sparkles } from "lucide-react";
+import { X, Play, ShieldAlert, Lightbulb, LightbulbOff, Clapperboard, MonitorPlay, Maximize, Minimize, RotateCw, ChevronRight, Sparkles, Home } from "lucide-react";
 import CinemaScene3D from "./CinemaScene3D";
 
 const TUTORIAL_STORAGE_KEY = "pelisclub_tutorial_reproductor_visto";
@@ -26,7 +26,6 @@ const useOrientation = () => {
     }, []);
     return esVertical;
 };
-
 
 const yaVioTutorial = () => {
     try {
@@ -138,6 +137,11 @@ const VideoPlayerModal = ({ token, servidor, titulo, linkVideo, onClose }) => {
         onClose();
     };
 
+    const handleIrInicio = async () => {
+        await salirFullscreen();
+        window.location.href = "/";
+    };
+
     const activarControles = () => {
         setControlesActivos(true);
         if (hideControlsTimer.current) clearTimeout(hideControlsTimer.current);
@@ -203,7 +207,7 @@ const VideoPlayerModal = ({ token, servidor, titulo, linkVideo, onClose }) => {
                     {modoCine && (
                         <CinemaScene3D lucesApagadas={lucesApagadas} encendido={confirmado} />
                     )}
-
+                    
                     <div
                         className={`absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-3 md:px-4 py-2.5 md:py-3 bg-gradient-to-b from-black/80 to-transparent transition-opacity duration-700 ${
                             controlesVisibles ? "opacity-100" : "opacity-40"
@@ -215,6 +219,14 @@ const VideoPlayerModal = ({ token, servidor, titulo, linkVideo, onClose }) => {
                         </div>
 
                         <div className="flex items-center gap-1 md:gap-2 shrink-0">
+                            <button
+                                onClick={handleIrInicio}
+                                className="h-11 w-11 md:h-12 md:w-12 flex items-center justify-center text-white/70 hover:text-[#E8B04B] hover:bg-white/10 rounded-full transition-colors"
+                                title="Ir al inicio"
+                            >
+                                <Home size={22} className="md:w-6 md:h-6" />
+                            </button>
+
                             <button
                                 onClick={handleClickCine}
                                 disabled={mostrarAvisoRotar}
@@ -274,7 +286,6 @@ const VideoPlayerModal = ({ token, servidor, titulo, linkVideo, onClose }) => {
                                 title={`${titulo} - ${servidor}`}
                                 className="w-full h-full"
                                 allow="accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen"
-                                allowFullScreen
                                 referrerPolicy="no-referrer"
                                 loading="lazy"
                             />
