@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
-import { X, Play, ShieldAlert, Lightbulb, LightbulbOff, Clapperboard, MonitorPlay, Maximize, Minimize, RotateCw } from "lucide-react";
+import { X, Play, ShieldAlert, Lightbulb, LightbulbOff, Clapperboard, MonitorPlay, Maximize, Minimize, RotateCw, ChevronRight, Sparkles } from "lucide-react";
 import CinemaScene3D from "./CinemaScene3D";
+
+const TUTORIAL_STORAGE_KEY = "pelisclub_tutorial_reproductor_visto";
 
 const useIsMobile = () => {
     const [isMobile, setIsMobile] = useState(false);
@@ -25,17 +27,61 @@ const useOrientation = () => {
     return esVertical;
 };
 
+
+const yaVioTutorial = () => {
+    try {
+        return localStorage.getItem(TUTORIAL_STORAGE_KEY) === "1";
+    } catch (err) {
+        return false;
+    }
+};
+
+const marcarTutorialVisto = () => {
+    try {
+        localStorage.setItem(TUTORIAL_STORAGE_KEY, "1");
+    } catch (err) {}
+};
+
+const construirPasos = (isMobile) => {
+    const pasos = [
+        {
+            target: "cine",
+            titulo: "Modo Cine",
+            texto: "Activa o desactiva la sala de cine 3D. Toca el botón para continuar.",
+        },
+        {
+            target: "luces",
+            titulo: "Luces de la sala",
+            texto: "Apaga las luces para una experiencia más inmersiva. Tócalo para continuar.",
+        },
+        {
+            target: "fullscreen",
+            titulo: "Pantalla completa",
+            texto: "Alterna la pantalla completa cuando quieras.",
+        },
+    ];
+    return isMobile ? pasos.filter((p) => p.target !== "fullscreen") : pasos;
+};
+
 const VideoPlayerModal = ({ token, servidor, titulo, linkVideo, onClose }) => {
     const [confirmado, setConfirmado] = useState(false);
     const [lucesApagadas, setLucesApagadas] = useState(false);
-    const [modoCine, setModoCine] = useState(true);
+
+    const [modoCine, setModoCine] = useState(false);
     const [esFullscreen, setEsFullscreen] = useState(false);
-    const [mostrarControles, setMostrarControles] = useState(true);
+
+    const [controlesActivos, setControlesActivos] = useState(true);
+    const hideControlsTimer = useRef(null);
+
+    const [mostrarTutorial, setMostrarTutorial] = useState(() => !yaVioTutorial());
+    const [pasoTutorial, setPasoTutorial] = useState(0);
 
     const containerRef = useRef(null);
-    const hideControlsTimer = useRef(null);
     const isMobile = useIsMobile();
     const esVertical = useOrientation();
+
+    const pasos = construirPasos(isMobile);
+    const pasoActual = pasos[pasoTutorial];
 
     useEffect(() => {
         document.body.style.overflow = "hidden";
@@ -48,67 +94,98 @@ const VideoPlayerModal = ({ token, servidor, titulo, linkVideo, onClose }) => {
         return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
     }, []);
 
-    const entrarFullscreenHorizontal = async () => {
+    const entrarFullscreen = async () => {
         try {
             if (!document.fullscreenElement) {
                 await containerRef.current?.requestFullscreen();
             }
-            if (window.screen.orientation && window.screen.orientation.lock) {
+            if (isMobile && window.screen.orientation && window.screen.orientation.lock) {
                 await window.screen.orientation.lock("landscape").catch(() => {});
             }
         } catch (err) {}
     };
 
-    const salirFullscreen = () => {
+    const salirFullscreen = async () => {
         if (window.screen.orientation && window.screen.orientation.unlock) {
             try { window.screen.orientation.unlock(); } catch (err) {}
         }
         if (document.fullscreenElement) {
-            document.exitFullscreen().catch(() => {});
+            try { await document.exitFullscreen(); } catch (err) {}
+        }
+    };
+
+    const toggleFullscreen = () => {
+        if (document.fullscreenElement) {
+            salirFullscreen();
+        } else {
+            entrarFullscreen();
         }
     };
 
     useEffect(() => {
-        if (isMobile) {
-            entrarFullscreenHorizontal();
-        }
-        return () => {
-            if (isMobile) salirFullscreen();
-        };
+        entrarFullscreen();
+        return () => { salirFullscreen(); };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isMobile]);
-
-    const toggleFullscreenDesktop = async () => {
-        if (!document.fullscreenElement) {
-            try { await containerRef.current?.requestFullscreen(); } catch (err) {}
-        } else {
-            document.exitFullscreen();
-        }
-    };
+    }, []);
 
     const handleConfirmar = () => {
         setConfirmado(true);
-        if (isMobile) {
-            entrarFullscreenHorizontal();
-        }
+        entrarFullscreen();
     };
 
     const handleClose = () => {
-        if (isMobile) salirFullscreen();
+        salirFullscreen();
         onClose();
     };
 
-    const handleActivity = () => {
-        setMostrarControles(true);
+    const activarControles = () => {
+        setControlesActivos(true);
         if (hideControlsTimer.current) clearTimeout(hideControlsTimer.current);
-        if (lucesApagadas) {
-            hideControlsTimer.current = setTimeout(() => setMostrarControles(false), 2500);
+        hideControlsTimer.current = setTimeout(() => setControlesActivos(false), 3000);
+    };
+
+    useEffect(() => {
+        activarControles();
+        return () => { if (hideControlsTimer.current) clearTimeout(hideControlsTimer.current); };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const avanzarTutorial = () => {
+        if (pasoTutorial < pasos.length - 1) {
+            setPasoTutorial((p) => p + 1);
+        } else {
+            setMostrarTutorial(false);
+            marcarTutorialVisto();
         }
     };
 
-    useEffect(() => () => { if (hideControlsTimer.current) clearTimeout(hideControlsTimer.current); }, []);
+    const saltarTutorial = () => {
+        setMostrarTutorial(false);
+        marcarTutorialVisto();
+    };
+
+    const handleClickCine = () => {
+        setModoCine((v) => !v);
+        if (mostrarTutorial && pasoActual?.target === "cine") avanzarTutorial();
+    };
+
+    const handleClickLuces = () => {
+        setLucesApagadas((v) => !v);
+        if (mostrarTutorial && pasoActual?.target === "luces") avanzarTutorial();
+    };
+
+    const handleClickFullscreen = () => {
+        toggleFullscreen();
+        if (mostrarTutorial && pasoActual?.target === "fullscreen") avanzarTutorial();
+    };
 
     const mostrarAvisoRotar = isMobile && esVertical;
+    const controlesVisibles = controlesActivos || mostrarTutorial;
+
+    const anilloActivo = (target) =>
+        mostrarTutorial && pasoActual?.target === target
+            ? "ring-2 ring-[#E8B04B] ring-offset-2 ring-offset-black animate-pulse"
+            : "";
 
     return (
         <>
@@ -116,8 +193,8 @@ const VideoPlayerModal = ({ token, servidor, titulo, linkVideo, onClose }) => {
 
             <div
                 className="fixed inset-0 z-[60] flex items-center justify-center pointer-events-none"
-                onMouseMove={handleActivity}
-                onTouchStart={handleActivity}
+                onMouseMove={activarControles}
+                onTouchStart={activarControles}
             >
                 <div
                     ref={containerRef}
@@ -127,10 +204,9 @@ const VideoPlayerModal = ({ token, servidor, titulo, linkVideo, onClose }) => {
                         <CinemaScene3D lucesApagadas={lucesApagadas} encendido={confirmado} />
                     )}
 
-                    {/* HEADER — ya no se oculta ni se traslada, solo se atenúa la opacidad. Sigue siendo clicable siempre */}
                     <div
-                        className={`absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-3 md:px-4 py-2.5 md:py-3 bg-gradient-to-b from-black/80 to-transparent transition-opacity duration-500 ${
-                            lucesApagadas && !mostrarControles ? "opacity-30" : "opacity-100"
+                        className={`absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-3 md:px-4 py-2.5 md:py-3 bg-gradient-to-b from-black/80 to-transparent transition-opacity duration-700 ${
+                            controlesVisibles ? "opacity-100" : "opacity-40"
                         }`}
                     >
                         <div className="flex flex-col min-w-0 pr-2">
@@ -138,40 +214,37 @@ const VideoPlayerModal = ({ token, servidor, titulo, linkVideo, onClose }) => {
                             <span className="text-[9px] md:text-[10px] text-white/40 uppercase tracking-wide">Servidor: {servidor}</span>
                         </div>
 
-                        <div className="flex items-center gap-0.5 md:gap-1 shrink-0">
+                        <div className="flex items-center gap-1 md:gap-2 shrink-0">
                             <button
-                                onClick={() => setModoCine((v) => !v)}
+                                onClick={handleClickCine}
                                 disabled={mostrarAvisoRotar}
-                                className="h-8 w-8 flex items-center justify-center text-white/70 hover:text-[#E8B04B] hover:bg-white/10 rounded-full transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-white/70 disabled:cursor-not-allowed"
+                                className={`h-11 w-11 md:h-12 md:w-12 flex items-center justify-center text-white/70 hover:text-[#E8B04B] hover:bg-white/10 rounded-full transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-white/70 disabled:cursor-not-allowed ${anilloActivo("cine")}`}
                                 title={modoCine ? "Quitar sala de cine" : "Mostrar sala de cine"}
                             >
-                                {modoCine ? <MonitorPlay size={16} /> : <Clapperboard size={16} />}
+                                {modoCine ? <MonitorPlay size={22} className="md:w-6 md:h-6" /> : <Clapperboard size={22} className="md:w-6 md:h-6" />}
                             </button>
                             <button
-                                onClick={() => setLucesApagadas((v) => !v)}
+                                onClick={handleClickLuces}
                                 disabled={mostrarAvisoRotar}
-                                className="h-8 w-8 flex items-center justify-center text-white/70 hover:text-[#E8B04B] hover:bg-white/10 rounded-full transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-white/70 disabled:cursor-not-allowed"
+                                className={`h-11 w-11 md:h-12 md:w-12 flex items-center justify-center text-white/70 hover:text-[#E8B04B] hover:bg-white/10 rounded-full transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-white/70 disabled:cursor-not-allowed ${anilloActivo("luces")}`}
                                 title={lucesApagadas ? "Encender luces" : "Apagar luces"}
                             >
-                                {lucesApagadas ? <LightbulbOff size={16} /> : <Lightbulb size={16} />}
+                                {lucesApagadas ? <LightbulbOff size={22} className="md:w-6 md:h-6" /> : <Lightbulb size={22} className="md:w-6 md:h-6" />}
                             </button>
 
-                            {!isMobile && (
-                                <button
-                                    onClick={toggleFullscreenDesktop}
-                                    className="h-8 w-8 flex items-center justify-center text-white/70 hover:text-[#E8B04B] hover:bg-white/10 rounded-full transition-colors"
-                                    title={esFullscreen ? "Salir de pantalla completa" : "Pantalla completa"}
-                                >
-                                    {esFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
-                                </button>
-                            )}
+                            <button
+                                onClick={handleClickFullscreen}
+                                className={`h-11 w-11 md:h-12 md:w-12 flex items-center justify-center text-white/70 hover:text-[#E8B04B] hover:bg-white/10 rounded-full transition-colors ${anilloActivo("fullscreen")}`}
+                                title={esFullscreen ? "Salir de pantalla completa" : "Pantalla completa"}
+                            >
+                                {esFullscreen ? <Minimize size={22} className="md:w-6 md:h-6" /> : <Maximize size={22} className="md:w-6 md:h-6" />}
+                            </button>
 
-                            {/* La X siempre queda habilitada, incluso con el aviso de rotar visible */}
                             <button
                                 onClick={handleClose}
-                                className="h-8 w-8 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+                                className="h-11 w-11 md:h-12 md:w-12 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-colors"
                             >
-                                <X size={18} />
+                                <X size={24} className="md:w-7 md:h-7" />
                             </button>
                         </div>
                     </div>
@@ -208,10 +281,9 @@ const VideoPlayerModal = ({ token, servidor, titulo, linkVideo, onClose }) => {
                         )}
                     </div>
 
-                    {/* AVISO EXTERNO SERVIDOR */}
                     <div
-                        className={`absolute bottom-0 left-0 right-0 z-30 flex items-start gap-2 px-3 md:px-4 py-2 md:py-2.5 bg-gradient-to-t from-black/90 to-transparent transition-opacity duration-500 ${
-                            lucesApagadas && !mostrarControles ? "opacity-30" : "opacity-100"
+                        className={`absolute bottom-0 left-0 right-0 z-30 flex items-start gap-2 px-3 md:px-4 py-2 md:py-2.5 bg-gradient-to-t from-black/90 to-transparent transition-opacity duration-700 ${
+                            controlesVisibles ? "opacity-100" : "opacity-40"
                         }`}
                     >
                         <ShieldAlert size={12} className="text-white/25 shrink-0 mt-0.5" />
@@ -220,7 +292,46 @@ const VideoPlayerModal = ({ token, servidor, titulo, linkVideo, onClose }) => {
                         </p>
                     </div>
 
-                    {/* POPUP: gira tu dispositivo — solo bloquea visualmente, la X del header sigue tocable por encima (z-30 > z-40 no, corregido abajo) */}
+                    {mostrarTutorial && pasoActual && !mostrarAvisoRotar && (
+                        <div className="absolute top-16 md:top-20 right-3 md:right-4 z-40 w-64 md:w-72 bg-[#0D0C0E] border border-[#E8B04B]/40 rounded-sm shadow-2xl p-4 animate-[fadeIn_0.3s_ease-out]">
+                            <div className="flex items-center gap-2 mb-2">
+                                <Sparkles size={14} className="text-[#E8B04B]" />
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-[#E8B04B]">
+                                    Paso {pasoTutorial + 1} de {pasos.length}
+                                </span>
+                            </div>
+                            <p className="text-sm font-bold text-white mb-1">{pasoActual.titulo}</p>
+                            <p className="text-xs text-white/60 leading-relaxed mb-4">{pasoActual.texto}</p>
+
+                            <div className="flex items-center justify-between">
+                                <button
+                                    onClick={saltarTutorial}
+                                    className="text-[10px] font-semibold text-white/40 hover:text-white/70 transition-colors"
+                                >
+                                    Saltar
+                                </button>
+                                <button
+                                    onClick={avanzarTutorial}
+                                    className="flex items-center gap-1 text-xs font-bold text-black bg-[#E8B04B] hover:bg-[#f0c06a] px-3 py-1.5 rounded-sm transition-colors"
+                                >
+                                    {pasoTutorial < pasos.length - 1 ? "Siguiente" : "Entendido"}
+                                    <ChevronRight size={13} />
+                                </button>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 mt-3">
+                                {pasos.map((_, i) => (
+                                    <div
+                                        key={i}
+                                        className={`h-1 flex-1 rounded-full transition-colors ${
+                                            i <= pasoTutorial ? "bg-[#E8B04B]" : "bg-white/10"
+                                        }`}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     <div
                         className={`absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-black/92 backdrop-blur-sm transition-opacity duration-500 ${
                             mostrarAvisoRotar ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
