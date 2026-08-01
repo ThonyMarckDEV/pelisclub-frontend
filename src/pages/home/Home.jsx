@@ -4,6 +4,7 @@ import { Play, Star, Film, Tv, X, ChevronLeft, ChevronRight } from "lucide-react
 import { peliculas as fetchPeliculas, destacada as fetchDestacada, series as fetchSeries } from "services/publicoService";
 import PeliculaDetalleModal from "components/Shared/Modals/pelicula/PeliculaDetalleModal";
 import SerieDetalleModal from "components/Shared/Modals/serie/SerieDetalleModal";
+import BraveRecomendadoModal, { debeMostrarBraveModal } from "components/Shared/Modals/BraveRecomendadoModal";
 import MovieCard from "./MovieCard";
 import Footer from "./Footer";
 import CatalogoSearch from "./CatalogoSearch";
@@ -40,11 +41,19 @@ const Home = () => {
   const [loadingSeries, setLoadingSeries] = useState(true);
   const [serieSlugAbierto, setSerieSlugAbierto] = useState(null);
 
+  const [mostrarBraveModal, setMostrarBraveModal] = useState(false);
+
   const mostrarPeliculas = tipoContenido === "" || tipoContenido === "pelicula";
   const mostrarSeries = tipoContenido === "" || tipoContenido === "serie";
 
   const timerRef = useRef(null);
   const featured = destacados[indiceActivo] || null;
+
+  useEffect(() => {
+    if (debeMostrarBraveModal()) {
+      setMostrarBraveModal(true);
+    }
+  }, []);
 
   useEffect(() => {
     const loadFeatured = async () => {
@@ -408,6 +417,10 @@ const Home = () => {
 
       {serieSlugAbierto && (
         <SerieDetalleModal slug={serieSlugAbierto} onClose={cerrarModalSerie} />
+      )}
+
+      {mostrarBraveModal && (
+        <BraveRecomendadoModal onClose={() => setMostrarBraveModal(false)} />
       )}
     </div>
   );

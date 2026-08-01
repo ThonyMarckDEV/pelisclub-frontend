@@ -72,12 +72,13 @@ const PeliculaDetalleModal = ({ slug, onClose }) => {
             />
 
             {/* WRAPPER */}
-            <div className="fixed inset-x-0 bottom-0 z-50 flex justify-center pointer-events-none">
+            <div className="fixed inset-0 z-50 flex items-end md:items-stretch justify-center pointer-events-none">
                 <div
-                    className={`relative w-full bg-[#0D0C0E] rounded-t-lg border border-white/10 border-b-0 shadow-2xl overflow-hidden pointer-events-auto flex flex-col
-                        max-h-[92vh] md:max-h-[90vh]
+                    className={`relative w-full bg-[#0D0C0E] rounded-t-lg md:rounded-none border border-white/10 border-b-0 md:border-0 shadow-2xl overflow-hidden pointer-events-auto flex flex-col
+                        max-h-[92vh] md:max-h-none md:h-full
                         transition-transform duration-300 ease-out
-                        ${visible ? "translate-y-0" : "translate-y-full"}
+                        ${visible ? "translate-y-0" : "translate-y-full md:translate-y-0"}
+                        ${visible ? "md:opacity-100" : "md:opacity-0"}
                     `}
                 >
                     {/* HEADER */}
@@ -104,9 +105,11 @@ const PeliculaDetalleModal = ({ slug, onClose }) => {
                             <p className="text-sm font-semibold">No se pudo cargar la información.</p>
                         </div>
                     ) : (
-                        <>
-                            <div className="flex-1 overflow-y-auto oculta-scrollbar">
-                                <div className="max-w-2xl mx-auto">
+                        <div className="flex-1 overflow-y-auto md:overflow-hidden oculta-scrollbar md:flex md:min-h-0">
+
+                            {/* COLUMNA IZQUIERDA — trailer, info y CTA */}
+                            <div className="md:w-3/5 md:h-full md:overflow-y-auto oculta-scrollbar">
+                                <div className="max-w-2xl md:max-w-none mx-auto">
                                     {/* TRAILER / BANNER */}
                                     <div className="relative w-full aspect-video bg-black">
                                         {embedUrl ? (
@@ -212,14 +215,16 @@ const PeliculaDetalleModal = ({ slug, onClose }) => {
                                             </div>
                                         )}
                                     </div>
-
-                                    {/* COMENTARIOS */}
-                                    <div className="px-6 pb-6">
-                                        <ComentariosSection peliculaId={pelicula.id} />
-                                    </div>
                                 </div>
                             </div>
-                        </>
+
+                            {/* COLUMNA DERECHA — comentarios */}
+                            <div className="md:w-2/5 md:h-full md:overflow-y-auto oculta-scrollbar border-t md:border-t-0 md:border-l border-white/10">
+                                <div className="p-6">
+                                    <ComentariosSection peliculaId={pelicula.id} />
+                                </div>
+                            </div>
+                        </div>
                     )}
                 </div>
             </div>
