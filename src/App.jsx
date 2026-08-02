@@ -33,13 +33,16 @@ import EditarActor from 'pages/actor/Update';
 import ListarPeliculas from 'pages/pelicula/Index';
 import AgregarPelicula from 'pages/pelicula/Store';
 import EditarPelicula from 'pages/pelicula/Update';
+import PeliculaDetalle from 'pages/pelicula/Detalle';
 
 // UI VIDEO
 import GestionVideo from 'pages/video/Gestion'; 
 
+// UI SERIES
 import ListarSeries from 'pages/serie/Index';
 import AgregarSerie from 'pages/serie/Store';
 import EditarSerie from 'pages/serie/Update';
+import SerieDetalle from 'pages/serie/Detalle';
 
 import GestionTemporadas from 'pages/temporada/Gestion';
 
@@ -62,6 +65,8 @@ function AppContent() {
       {/* 1. SITIO PÚBLICO — una sola página, el login vive en un modal desde el TopBar */}
       <Route element={<PublicLayout />}>
         <Route path="/" element={<Home />} />
+        <Route path="/pelicula/:slug" element={<PeliculaDetalle />} />
+        <Route path="/serie/:slug" element={<SerieDetalle />} />
         <Route path="/privacidad" element={<PoliticaPrivacidad />} />
         <Route path="/terminos" element={<Terminos />} />
       </Route>

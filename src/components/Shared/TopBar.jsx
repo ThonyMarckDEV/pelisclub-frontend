@@ -100,7 +100,6 @@ const SearchBox = ({ onNavigateSearch, onSelectItem }) => {
       const peliculas = (resPeliculas.data || []).map((p) => ({ ...p, tipo: "pelicula" }));
       const series = (resSeries.data || []).map((s) => ({ ...s, tipo: "serie", anio_estreno: s.anio_inicio }));
 
-      // Mezcla y limita a 6 resultados totales, priorizando alternar entre ambos tipos
       const combinados = [];
       const max = Math.max(peliculas.length, series.length);
       for (let i = 0; i < max && combinados.length < 6; i++) {
@@ -247,16 +246,10 @@ const TopBar = () => {
   const irAGenero = (slug) => navigate(`/?genero=${slug}`);
   const irACatalogo = (slug) => navigate(`/?filtro=${slug}`);
   const irABusqueda = (term) => navigate(`/?search=${encodeURIComponent(term)}`);
-  const irAPelicula = (slug) => navigate(`/?pelicula=${slug}`);
-  const irASerie = (slug) => navigate(`/?serie=${slug}`);
 
-  // Enruta al modal correcto según el tipo de resultado elegido en el buscador
+  // Navega directo a la página real de la película/serie (rutas /pelicula/:slug o /serie/:slug)
   const handleSelectItem = (item) => {
-    if (item.tipo === "serie") {
-      irASerie(item.slug);
-    } else {
-      irAPelicula(item.slug);
-    }
+    navigate(`/${item.tipo === "serie" ? "serie" : "pelicula"}/${item.slug}`);
   };
 
   const handleMobileSearchSubmit = (e) => {

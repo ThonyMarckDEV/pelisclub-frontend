@@ -1,10 +1,7 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Play, Star, Film, Tv, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Play, Star, Film, Tv, X } from "lucide-react";
 import { peliculas as fetchPeliculas, destacada as fetchDestacada, series as fetchSeries } from "services/publicoService";
-import PeliculaDetalleModal from "components/Shared/Modals/pelicula/PeliculaDetalleModal";
-import SerieDetalleModal from "components/Shared/Modals/serie/SerieDetalleModal";
-import BraveRecomendadoModal, { debeMostrarBraveModal } from "components/Shared/Modals/BraveRecomendadoModal";
 import MovieCard from "./MovieCard";
 import Footer from "./Footer";
 import CatalogoSearch from "./CatalogoSearch";
@@ -16,7 +13,7 @@ const TIPOS = [
   { value: "serie", label: "Series" },
 ];
 
-const INTERVALO_CARRUSEL = 7000; // ms entre cambios automáticos
+const INTERVALO_CARRUSEL = 7000;
 
 const Home = () => {
   const [searchParams] = useSearchParams();
@@ -25,8 +22,6 @@ const Home = () => {
   const generoSlug = searchParams.get("genero") || "";
   const filtroTipo = searchParams.get("filtro") || "";
   const searchTerm = searchParams.get("search") || "";
-  const peliculaSlug = searchParams.get("pelicula") || "";
-  const serieSlugParam = searchParams.get("serie") || "";
   const tipoContenido = searchParams.get("tipo") || "";
 
   const [destacados, setDestacados] = useState([]);
@@ -35,25 +30,14 @@ const Home = () => {
 
   const [catalogo, setCatalogo] = useState([]);
   const [loadingCatalogo, setLoadingCatalogo] = useState(true);
-  const [slugAbierto, setSlugAbierto] = useState(null);
 
   const [seriesCatalogo, setSeriesCatalogo] = useState([]);
   const [loadingSeries, setLoadingSeries] = useState(true);
-  const [serieSlugAbierto, setSerieSlugAbierto] = useState(null);
-
-  const [mostrarBraveModal, setMostrarBraveModal] = useState(false);
 
   const mostrarPeliculas = tipoContenido === "" || tipoContenido === "pelicula";
   const mostrarSeries = tipoContenido === "" || tipoContenido === "serie";
 
-  const timerRef = useRef(null);
   const featured = destacados[indiceActivo] || null;
-
-  useEffect(() => {
-    if (debeMostrarBraveModal()) {
-      setMostrarBraveModal(true);
-    }
-  }, []);
 
   useEffect(() => {
     const loadFeatured = async () => {
@@ -71,29 +55,21 @@ const Home = () => {
     loadFeatured();
   }, []);
 
-  // Auto-avance del carrusel, se reinicia cada vez que cambia manualmente el índice
   useEffect(() => {
     if (destacados.length <= 1) return;
 
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
+    const timer = setInterval(() => {
       setIndiceActivo((prev) => (prev + 1) % destacados.length);
     }, INTERVALO_CARRUSEL);
 
-    return () => clearInterval(timerRef.current);
-  }, [destacados, indiceActivo]);
+    return () => clearInterval(timer);
+  }, [destacados]);
 
   const irASlide = (i) => setIndiceActivo(i);
-  const slideAnterior = () => setIndiceActivo((prev) => (prev - 1 + destacados.length) % destacados.length);
-  const slideSiguiente = () => setIndiceActivo((prev) => (prev + 1) % destacados.length);
 
   const abrirDestacado = () => {
     if (!featured) return;
-    if (featured.tipo === "serie") {
-      setSerieSlugAbierto(featured.slug);
-    } else {
-      setSlugAbierto(featured.slug);
-    }
+    navigate(featured.tipo === "serie" ? `/serie/${featured.slug}` : `/pelicula/${featured.slug}`);
   };
 
   const loadCatalogo = useCallback(async () => {
@@ -138,18 +114,6 @@ const Home = () => {
     loadSeries();
   }, [loadSeries]);
 
-  useEffect(() => {
-    if (peliculaSlug) {
-      setSlugAbierto(peliculaSlug);
-    }
-  }, [peliculaSlug]);
-
-  useEffect(() => {
-    if (serieSlugParam) {
-      setSerieSlugAbierto(serieSlugParam);
-    }
-  }, [serieSlugParam]);
-
   const buscarPorNombre = useCallback((texto) => {
     const params = new URLSearchParams(searchParams);
     if (texto) {
@@ -182,27 +146,16 @@ const Home = () => {
 
   const limpiarFiltro = () => navigate("/");
 
-  const cerrarModal = () => {
-    setSlugAbierto(null);
-    if (peliculaSlug) navigate("/", { replace: true });
-  };
-
-  const cerrarModalSerie = () => {
-    setSerieSlugAbierto(null);
-    if (serieSlugParam) navigate("/", { replace: true });
-  };
-
   const tituloCatalogo = filtroActivo ? filtroActivo.valor : "Catálogo";
 
   return (
     <div className="bg-black min-h-screen flex flex-col">
       {/* HERO — CARRUSEL */}
-      <section className="relative h-[70vh] min-h-[420px] w-full overflow-hidden group/hero">
+      <section className="relative h-[70vh] min-h-[420px] w-full overflow-hidden">
         {loadingFeatured ? (
           <div className="absolute inset-0 bg-gradient-to-br from-[#2A0E10] via-[#17070A] to-black" />
         ) : featured ? (
           <>
-            {/* Capas de fondo — todas montadas, solo se muestra la activa (crossfade) */}
             {destacados.map((item, i) => (
               <div
                 key={`${item.tipo}-${item.id}`}
@@ -217,26 +170,6 @@ const Home = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/20 to-transparent" />
               </div>
             ))}
-
-            {/* Flechas — visibles solo con hover en desktop, si hay más de 1 destacado */}
-            {destacados.length > 1 && (
-              <>
-                <button
-                  onClick={slideAnterior}
-                  className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 z-20 h-10 w-10 items-center justify-center bg-black/40 hover:bg-black/70 text-white rounded-full opacity-0 group-hover/hero:opacity-100 transition-opacity"
-                  aria-label="Anterior"
-                >
-                  <ChevronLeft size={20} />
-                </button>
-                <button
-                  onClick={slideSiguiente}
-                  className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 h-10 w-10 items-center justify-center bg-black/40 hover:bg-black/70 text-white rounded-full opacity-0 group-hover/hero:opacity-100 transition-opacity"
-                  aria-label="Siguiente"
-                >
-                  <ChevronRight size={20} />
-                </button>
-              </>
-            )}
 
             <div className="relative z-10 h-full max-w-7xl mx-auto px-4 sm:px-6 flex flex-col justify-end pb-16">
               <span className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#E8B04B] mb-3 flex items-center gap-2">
@@ -280,7 +213,6 @@ const Home = () => {
                 )}
               </div>
 
-              {/* Indicadores de puntos */}
               {destacados.length > 1 && (
                 <div className="flex items-center gap-2 mt-8">
                   {destacados.map((_, i) => (
@@ -364,7 +296,7 @@ const Home = () => {
           ) : catalogo.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
               {catalogo.map((p) => (
-                <MovieCard key={p.id} pelicula={p} onOpen={setSlugAbierto} />
+                <MovieCard key={p.id} pelicula={p} tipo="pelicula" />
               ))}
             </div>
           ) : (
@@ -396,7 +328,7 @@ const Home = () => {
                 <MovieCard
                   key={s.id}
                   pelicula={{ ...s, anio_estreno: s.anio_inicio }}
-                  onOpen={setSerieSlugAbierto}
+                  tipo="serie"
                 />
               ))}
             </div>
@@ -410,18 +342,6 @@ const Home = () => {
       )}
 
       <Footer />
-
-      {slugAbierto && (
-        <PeliculaDetalleModal slug={slugAbierto} onClose={cerrarModal} />
-      )}
-
-      {serieSlugAbierto && (
-        <SerieDetalleModal slug={serieSlugAbierto} onClose={cerrarModalSerie} />
-      )}
-
-      {mostrarBraveModal && (
-        <BraveRecomendadoModal onClose={() => setMostrarBraveModal(false)} />
-      )}
     </div>
   );
 };
