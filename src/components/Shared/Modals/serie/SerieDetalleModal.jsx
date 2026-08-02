@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Film, Tv } from "lucide-react";
+import { X, Play, Film, Tv } from "lucide-react";
 import { showSerie, temporadaEpisodios, showEpisodio } from "services/publicoService";
 import VideoOpcionesModal from "components/Shared/Modals/pelicula/VideoOpcionesModal";
 import EstrellasCalificacion from "pages/calificacion/EstrellasCalificacion";
@@ -94,128 +94,123 @@ const SerieDetalleModal = ({ slug, onClose }) => {
                 .oculta-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
             `}</style>
 
+            {/* CONTENEDOR — pantalla completa fija, mismo comportamiento en móvil y desktop */}
             <div
-                className={`fixed inset-0 z-50 bg-black/85 backdrop-blur-sm transition-opacity duration-300 ${visible ? "opacity-100" : "opacity-0"}`}
-                onClick={handleClose}
-            />
+                className={`fixed inset-0 z-50 w-screen h-screen bg-[#0D0C0E] flex flex-col transition-opacity duration-300 ${
+                    visible ? "opacity-100" : "opacity-0"
+                }`}
+            >
+                {/* HEADER — sticky, siempre visible */}
+                <div className="sticky top-0 z-30 shrink-0 flex items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b border-white/10 bg-[#0D0C0E]">
+                    <h3 className="text-sm md:text-base font-bold text-white truncate pr-12">{serie?.titulo || ""}</h3>
+                    <button
+                        onClick={handleClose}
+                        className="absolute top-1/2 -translate-y-1/2 right-3 md:right-4 z-20 h-9 w-9 md:h-10 md:w-10 flex items-center justify-center bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors shrink-0"
+                        aria-label="Cerrar"
+                    >
+                        <X size={20} />
+                    </button>
+                </div>
 
-            <div className="fixed inset-0 z-50 flex items-end md:items-stretch justify-center pointer-events-none">
-                <div
-                    className={`relative w-full bg-[#0D0C0E] rounded-t-lg md:rounded-none border border-white/10 border-b-0 md:border-0 shadow-2xl overflow-hidden pointer-events-auto flex flex-col
-                        max-h-[85vh] md:max-h-none md:h-full
-                        transition-transform duration-300 ease-out
-                        ${visible ? "translate-y-0" : "translate-y-full md:translate-y-0"}
-                        ${visible ? "md:opacity-100" : "md:opacity-0"}
-                    `}
-                >
-                    <div className="relative shrink-0 flex items-center justify-between px-4 py-3 border-b border-white/10">
-                        <h3 className="text-sm font-bold text-white truncate pr-8">{serie?.titulo || ""}</h3>
-                        <button
-                            onClick={handleClose}
-                            className="absolute top-3 right-3 z-20 h-9 w-9 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white rounded-full transition-colors"
-                        >
-                            <X size={18} />
-                        </button>
+                {loading ? (
+                    <div className="flex-1 flex items-center justify-center">
+                        <div className="w-8 h-8 border-4 border-white/10 border-t-[#E8B04B] rounded-full animate-spin" />
                     </div>
-
-                    {loading ? (
-                        <div className="flex-1 flex items-center justify-center">
-                            <div className="w-8 h-8 border-4 border-white/10 border-t-[#E8B04B] rounded-full animate-spin" />
-                        </div>
-                    ) : error || !serie ? (
-                        <div className="flex-1 flex flex-col items-center justify-center gap-3 text-white/30">
-                            <Tv size={32} />
-                            <p className="text-sm font-semibold">No se pudo cargar la información.</p>
-                        </div>
-                    ) : (
-                        <div className="flex-1 overflow-y-auto md:overflow-hidden oculta-scrollbar md:flex md:min-h-0">
-
-                            {/* COLUMNA IZQUIERDA — info de la serie */}
-                            <div className="md:w-2/5 md:h-full md:overflow-y-auto oculta-scrollbar">
-                                <div className="max-w-2xl md:max-w-none mx-auto">
-                                    <div className="relative w-full aspect-video bg-black">
-                                        {embedUrl ? (
-                                            <iframe
-                                                src={embedUrl}
-                                                title={serie.titulo}
-                                                className="w-full h-full"
-                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                allowFullScreen
-                                            />
-                                        ) : serie.banner_url ? (
-                                            <img src={serie.banner_url} alt={serie.titulo} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <div className="w-full h-full bg-gradient-to-br from-[#2A0E10] via-[#17070A] to-black flex items-center justify-center">
-                                                <Tv size={40} className="text-white/10" />
-                                            </div>
-                                        )}
-                                        {!embedUrl && <div className="absolute inset-0 bg-gradient-to-t from-[#0D0C0E] via-black/20 to-transparent" />}
+                ) : error || !serie ? (
+                    <div className="flex-1 flex flex-col items-center justify-center gap-3 text-white/30">
+                        <Tv size={32} />
+                        <p className="text-sm font-semibold">No se pudo cargar la información.</p>
+                    </div>
+                ) : (
+                    <div className="flex-1 overflow-y-auto oculta-scrollbar">
+                        <div className="max-w-2xl mx-auto">
+                            {/* TRAILER / BANNER */}
+                            <div className="relative w-full aspect-video bg-black">
+                                {embedUrl ? (
+                                    <iframe
+                                        src={embedUrl}
+                                        title={serie.titulo}
+                                        className="w-full h-full"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                    />
+                                ) : serie.banner_url ? (
+                                    <img src={serie.banner_url} alt={serie.titulo} className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full bg-gradient-to-br from-[#2A0E10] via-[#17070A] to-black flex items-center justify-center">
+                                        <Tv size={40} className="text-white/10" />
                                     </div>
-
-                                    <div className="p-6">
-                                        <h2 className="text-2xl font-black text-white mb-2 md:hidden">{serie.titulo}</h2>
-
-                                        <div className="flex flex-wrap items-center gap-3 text-xs text-white/50 font-semibold mb-4">
-                                            <span>{serie.anio_inicio}{serie.anio_fin ? ` — ${serie.anio_fin}` : ' — presente'}</span>
-                                            <span className="px-1.5 py-0.5 border border-white/20 rounded-sm text-[10px]">{serie.clasificacion}</span>
-                                        </div>
-
-                                        {/* CALIFICACIÓN — promedio + estrellas interactivas */}
-                                        <div className="mb-4">
-                                            <EstrellasCalificacion
-                                                serieId={serie.id}
-                                                promedio={serie.calificacion_promedio}
-                                            />
-                                        </div>
-
-                                        {serie.generos?.length > 0 && (
-                                            <div className="flex flex-wrap gap-2 mb-4">
-                                                {serie.generos.map((g) => (
-                                                    <span key={g.slug} className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 bg-white/5 border border-white/10 text-white/60 rounded-full">
-                                                        {g.nombre}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
-
-                                        {serie.sinopsis && <p className="text-sm text-white/70 leading-relaxed mb-5">{serie.sinopsis}</p>}
-
-                                        {serie.director && (
-                                            <p className="text-xs text-white/40 mb-5">
-                                                <span className="text-white/60 font-bold">Creador:</span> {serie.director}
-                                            </p>
-                                        )}
-
-                                        {serie.actores?.length > 0 && (
-                                            <div>
-                                                <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2.5">Reparto</p>
-                                                <div className="flex flex-wrap gap-3">
-                                                    {serie.actores.map((actor, idx) => (
-                                                        <div key={idx} className="flex items-center gap-2">
-                                                            {actor.foto_url ? (
-                                                                <img src={actor.foto_url} alt={actor.nombre} className="w-8 h-8 rounded-full object-cover border border-white/10" />
-                                                            ) : (
-                                                                <div className="w-8 h-8 rounded-full bg-[#B8232B]/15 flex items-center justify-center text-[10px] font-black text-[#B8232B]">
-                                                                    {actor.nombre.charAt(0)}
-                                                                </div>
-                                                            )}
-                                                            <div className="flex flex-col leading-tight">
-                                                                <span className="text-xs font-bold text-white">{actor.nombre}</span>
-                                                                {actor.personaje && <span className="text-[10px] text-white/40">{actor.personaje}</span>}
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
+                                )}
+                                {!embedUrl && <div className="absolute inset-0 bg-gradient-to-t from-[#0D0C0E] via-black/20 to-transparent" />}
+                                <span className="absolute top-3 left-3 px-2.5 py-1 bg-black/70 backdrop-blur-sm text-white/70 text-[10px] font-bold uppercase tracking-widest rounded-sm pointer-events-none">
+                                    {embedUrl ? "Tráiler" : "Vista previa"}
+                                </span>
                             </div>
 
-                            {/* COLUMNA DERECHA — temporadas y episodios */}
-                            <div className="md:w-3/5 md:h-full md:overflow-y-auto oculta-scrollbar border-t md:border-t-0 md:border-l border-white/10">
-                                <div className="p-6">
-                                    {/* SELECTOR DE TEMPORADAS */}
+                            {/* INFO */}
+                            <div className="p-6">
+                                <h2 className="text-2xl font-black text-white mb-2 md:hidden">{serie.titulo}</h2>
+
+                                <div className="flex flex-wrap items-center gap-3 text-xs text-white/50 font-semibold mb-4">
+                                    <span>{serie.anio_inicio}{serie.anio_fin ? ` — ${serie.anio_fin}` : ' — presente'}</span>
+                                    <span className="px-1.5 py-0.5 border border-white/20 rounded-sm text-[10px]">{serie.clasificacion}</span>
+                                </div>
+
+                                {/* CALIFICACIÓN */}
+                                <div className="mb-5">
+                                    <EstrellasCalificacion
+                                        serieId={serie.id}
+                                        promedio={serie.calificacion_promedio}
+                                    />
+                                </div>
+
+                                {serie.generos?.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 mb-4">
+                                        {serie.generos.map((g) => (
+                                            <span key={g.slug} className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 bg-white/5 border border-white/10 text-white/60 rounded-full">
+                                                {g.nombre}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {serie.sinopsis && <p className="text-sm text-white/70 leading-relaxed mb-5">{serie.sinopsis}</p>}
+
+                                {serie.director && (
+                                    <p className="text-xs text-white/40 mb-5">
+                                        <span className="text-white/60 font-bold">Creador:</span> {serie.director}
+                                    </p>
+                                )}
+
+                                {serie.actores?.length > 0 && (
+                                    <div className="mb-6">
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2.5">Reparto</p>
+                                        <div className="flex flex-wrap gap-3">
+                                            {serie.actores.map((actor, idx) => (
+                                                <div key={idx} className="flex items-center gap-2">
+                                                    {actor.foto_url ? (
+                                                        <img src={actor.foto_url} alt={actor.nombre} className="w-8 h-8 rounded-full object-cover border border-white/10" />
+                                                    ) : (
+                                                        <div className="w-8 h-8 rounded-full bg-[#B8232B]/15 flex items-center justify-center text-[10px] font-black text-[#B8232B]">
+                                                            {actor.nombre.charAt(0)}
+                                                        </div>
+                                                    )}
+                                                    <div className="flex flex-col leading-tight">
+                                                        <span className="text-xs font-bold text-white">{actor.nombre}</span>
+                                                        {actor.personaje && <span className="text-[10px] text-white/40">{actor.personaje}</span>}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* TEMPORADAS Y EPISODIOS */}
+                                <div className="border-t border-white/10 pt-5">
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-4">
+                                        Toca un episodio para ver
+                                    </p>
+
                                     {serie.temporadas?.length > 0 ? (
                                         <>
                                             <div className="flex items-center gap-2 mb-5 overflow-x-auto pb-1">
@@ -234,7 +229,6 @@ const SerieDetalleModal = ({ slug, onClose }) => {
                                                 ))}
                                             </div>
 
-                                            {/* LISTA DE EPISODIOS */}
                                             {loadingEpisodios ? (
                                                 <div className="space-y-2">
                                                     {[1, 2, 3].map((i) => (
@@ -247,14 +241,17 @@ const SerieDetalleModal = ({ slug, onClose }) => {
                                                         <button
                                                             key={ep.id}
                                                             onClick={() => handleAbrirEpisodio(ep)}
-                                                            className="w-full flex items-center gap-3 p-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#E8B04B]/40 rounded-sm transition-colors text-left"
+                                                            className="w-full flex items-center gap-3 p-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#E8B04B]/40 rounded-sm transition-colors text-left group"
                                                         >
-                                                            <div className="w-20 h-12 rounded-sm bg-black border border-white/10 overflow-hidden shrink-0 flex items-center justify-center">
+                                                            <div className="relative w-20 h-12 rounded-sm bg-black border border-white/10 overflow-hidden shrink-0 flex items-center justify-center">
                                                                 {ep.portada_url ? (
                                                                     <img src={ep.portada_url} alt={ep.titulo} className="w-full h-full object-cover" />
                                                                 ) : (
                                                                     <Film size={16} className="text-white/20" />
                                                                 )}
+                                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                                                    <Play size={16} className="text-white fill-white" />
+                                                                </div>
                                                             </div>
                                                             <div className="flex-1 min-w-0">
                                                                 <p className="text-sm font-bold text-white truncate">
@@ -280,8 +277,8 @@ const SerieDetalleModal = ({ slug, onClose }) => {
                                 </div>
                             </div>
                         </div>
-                    )}
-                </div>
+                    </div>
+                )}
             </div>
 
             {cargandoVideos && (
