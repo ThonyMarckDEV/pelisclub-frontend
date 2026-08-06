@@ -162,7 +162,13 @@ const Home = () => {
                 className={`absolute inset-0 transition-opacity duration-1000 ${i === indiceActivo ? "opacity-100" : "opacity-0"}`}
               >
                 {item.banner_url ? (
-                  <img src={item.banner_url} alt={item.titulo} className="w-full h-full object-cover" />
+                  <img
+                      src={item.banner_url}
+                      alt={item.titulo}
+                      loading="eager"
+                      fetchPriority="high"
+                      className="w-full h-full object-cover"
+                  />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-[#2A0E10] via-[#17070A] to-black" />
                 )}
