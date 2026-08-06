@@ -3,7 +3,7 @@ import { handleResponse } from 'utilities/Responses/handleResponse';
 
 const BASE_URL = `${API_BASE_URL}/api/publico`;
 
-export const peliculas = async (page = 1, filters = {}) => {
+export const peliculas = async (page = 1, filters = {}, signal) => {
     const params = new URLSearchParams({
         page:   page,
         search: filters.search || '',
@@ -12,7 +12,8 @@ export const peliculas = async (page = 1, filters = {}) => {
     });
     const response = await fetch(`${BASE_URL}/peliculas?${params.toString()}`, {
         method: 'GET',
-        headers: { 'Accept': 'application/json' }
+        headers: { 'Accept': 'application/json' },
+        signal
     });
     return handleResponse(response);
 };
@@ -43,12 +44,13 @@ export const showPelicula = async (slug) => {
 
 export const linkVideo = (token) => `${BASE_URL}/ir/${token}`;
 
-export const series = async (page = 1, filters = {}) => {
+export const series = async (page = 1, filters = {}, signal) => {
     const params = new URLSearchParams({
         page: page, search: filters.search || '', genero: filters.genero || '',
     });
     const response = await fetch(`${BASE_URL}/series?${params.toString()}`, {
-        method: 'GET', headers: { 'Accept': 'application/json' }
+        method: 'GET', headers: { 'Accept': 'application/json' },
+        signal
     });
     return handleResponse(response);
 };

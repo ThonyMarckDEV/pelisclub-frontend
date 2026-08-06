@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Play, Star, Film, Tv, X } from "lucide-react";
 import { peliculas as fetchPeliculas, destacada as fetchDestacada, series as fetchSeries } from "services/publicoService";
@@ -6,6 +6,7 @@ import MovieCard from "./MovieCard";
 import Footer from "./Footer";
 import CatalogoSearch from "./CatalogoSearch";
 import InstallAppButton from "components/Shared/InstallAppButton";
+import Pagination from "components/Shared/Pagination";
 
 const TIPOS = [
   { value: "", label: "Todo" },
@@ -30,14 +31,22 @@ const Home = () => {
 
   const [catalogo, setCatalogo] = useState([]);
   const [loadingCatalogo, setLoadingCatalogo] = useState(true);
+  const [paginaPeliculas, setPaginaPeliculas] = useState(1);
+  const [totalPaginasPeliculas, setTotalPaginasPeliculas] = useState(1);
 
   const [seriesCatalogo, setSeriesCatalogo] = useState([]);
   const [loadingSeries, setLoadingSeries] = useState(true);
+  const [paginaSeries, setPaginaSeries] = useState(1);
+  const [totalPaginasSeries, setTotalPaginasSeries] = useState(1);
 
   const mostrarPeliculas = tipoContenido === "" || tipoContenido === "pelicula";
   const mostrarSeries = tipoContenido === "" || tipoContenido === "serie";
 
   const featured = destacados[indiceActivo] || null;
+
+  // Referencias para poder abortar el fetch anterior si el usuario cambia de filtro rápido
+  const abortPeliculasRef = useRef(null);
+  const abortSeriesRef = useRef(null);
 
   useEffect(() => {
     const loadFeatured = async () => {
@@ -72,25 +81,50 @@ const Home = () => {
     navigate(featured.tipo === "serie" ? `/serie/${featured.slug}` : `/pelicula/${featured.slug}`);
   };
 
+  // Cuando cambia el filtro/búsqueda/género, siempre volvemos a página 1 de ambos catálogos
+  useEffect(() => {
+    setPaginaPeliculas(1);
+    setPaginaSeries(1);
+  }, [generoSlug, filtroTipo, searchTerm, tipoContenido]);
+
   const loadCatalogo = useCallback(async () => {
     if (!mostrarPeliculas) {
       setCatalogo([]);
       setLoadingCatalogo(false);
       return;
     }
+
+    // Cancela cualquier request de películas que todavía esté en vuelo
+    if (abortPeliculasRef.current) abortPeliculasRef.current.abort();
+    const controller = new AbortController();
+    abortPeliculasRef.current = controller;
+
     setLoadingCatalogo(true);
     try {
-      const response = await fetchPeliculas(1, { genero: generoSlug, filtro: filtroTipo, search: searchTerm });
+      const response = await fetchPeliculas(
+        paginaPeliculas,
+        { genero: generoSlug, filtro: filtroTipo, search: searchTerm },
+        controller.signal
+      );
       setCatalogo(response.data || []);
+      setTotalPaginasPeliculas(response.last_page || 1);
     } catch (error) {
-      setCatalogo([]);
+      if (error?.name !== "AbortError") {
+        setCatalogo([]);
+        setTotalPaginasPeliculas(1);
+      }
     } finally {
-      setLoadingCatalogo(false);
+      if (abortPeliculasRef.current === controller) {
+        setLoadingCatalogo(false);
+      }
     }
-  }, [generoSlug, filtroTipo, searchTerm, mostrarPeliculas]);
+  }, [generoSlug, filtroTipo, searchTerm, mostrarPeliculas, paginaPeliculas]);
 
   useEffect(() => {
     loadCatalogo();
+    return () => {
+      if (abortPeliculasRef.current) abortPeliculasRef.current.abort();
+    };
   }, [loadCatalogo]);
 
   const loadSeries = useCallback(async () => {
@@ -99,19 +133,38 @@ const Home = () => {
       setLoadingSeries(false);
       return;
     }
+
+    // Cancela cualquier request de series que todavía esté en vuelo
+    if (abortSeriesRef.current) abortSeriesRef.current.abort();
+    const controller = new AbortController();
+    abortSeriesRef.current = controller;
+
     setLoadingSeries(true);
     try {
-      const response = await fetchSeries(1, { genero: generoSlug, search: searchTerm });
+      const response = await fetchSeries(
+        paginaSeries,
+        { genero: generoSlug, search: searchTerm },
+        controller.signal
+      );
       setSeriesCatalogo(response.data || []);
+      setTotalPaginasSeries(response.last_page || 1);
     } catch (error) {
-      setSeriesCatalogo([]);
+      if (error?.name !== "AbortError") {
+        setSeriesCatalogo([]);
+        setTotalPaginasSeries(1);
+      }
     } finally {
-      setLoadingSeries(false);
+      if (abortSeriesRef.current === controller) {
+        setLoadingSeries(false);
+      }
     }
-  }, [generoSlug, searchTerm, mostrarSeries]);
+  }, [generoSlug, searchTerm, mostrarSeries, paginaSeries]);
 
   useEffect(() => {
     loadSeries();
+    return () => {
+      if (abortSeriesRef.current) abortSeriesRef.current.abort();
+    };
   }, [loadSeries]);
 
   const buscarPorNombre = useCallback((texto) => {
@@ -147,6 +200,16 @@ const Home = () => {
   const limpiarFiltro = () => navigate("/");
 
   const tituloCatalogo = filtroActivo ? filtroActivo.valor : "Catálogo";
+
+  const cambiarPaginaPeliculas = (pagina) => {
+    setPaginaPeliculas(pagina);
+    document.getElementById("catalogo-peliculas")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const cambiarPaginaSeries = (pagina) => {
+    setPaginaSeries(pagina);
+    document.getElementById("catalogo-series")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
     <div className="bg-black min-h-screen flex flex-col">
@@ -287,7 +350,7 @@ const Home = () => {
 
       {/* CATALOGO PELICULAS */}
       {mostrarPeliculas && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-12 w-full">
+        <section id="catalogo-peliculas" className="max-w-7xl mx-auto px-4 sm:px-6 pb-12 w-full scroll-mt-4">
           <h2 className="text-white font-black text-lg uppercase tracking-wide capitalize mb-5 flex items-center gap-2">
             <Film size={18} className="text-[#E8B04B]" />
             {tipoContenido === "pelicula" ? tituloCatalogo : "Películas"}
@@ -300,11 +363,20 @@ const Home = () => {
               ))}
             </div>
           ) : catalogo.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-              {catalogo.map((p) => (
-                <MovieCard key={p.id} pelicula={p} tipo="pelicula" />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+                {catalogo.map((p) => (
+                  <MovieCard key={p.id} pelicula={p} tipo="pelicula" />
+                ))}
+              </div>
+              <div className="mt-8">
+                <Pagination
+                  currentPage={paginaPeliculas}
+                  totalPages={totalPaginasPeliculas}
+                  onPageChange={cambiarPaginaPeliculas}
+                />
+              </div>
+            </>
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-white/30 gap-2">
               <Film size={32} />
@@ -316,7 +388,7 @@ const Home = () => {
 
       {/* CATALOGO SERIES */}
       {mostrarSeries && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-12 flex-1 w-full">
+        <section id="catalogo-series" className="max-w-7xl mx-auto px-4 sm:px-6 pb-12 flex-1 w-full scroll-mt-4">
           <h2 className="text-white font-black text-lg uppercase tracking-wide mb-5 flex items-center gap-2">
             <Tv size={18} className="text-[#E8B04B]" />
             {tipoContenido === "serie" ? tituloCatalogo : "Series"}
@@ -329,15 +401,24 @@ const Home = () => {
               ))}
             </div>
           ) : seriesCatalogo.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-              {seriesCatalogo.map((s) => (
-                <MovieCard
-                  key={s.id}
-                  pelicula={{ ...s, anio_estreno: s.anio_inicio }}
-                  tipo="serie"
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+                {seriesCatalogo.map((s) => (
+                  <MovieCard
+                    key={s.id}
+                    pelicula={{ ...s, anio_estreno: s.anio_inicio }}
+                    tipo="serie"
+                  />
+                ))}
+              </div>
+              <div className="mt-8">
+                <Pagination
+                  currentPage={paginaSeries}
+                  totalPages={totalPaginasSeries}
+                  onPageChange={cambiarPaginaSeries}
                 />
-              ))}
-            </div>
+              </div>
+            </>
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-white/30 gap-2">
               <Tv size={32} />
