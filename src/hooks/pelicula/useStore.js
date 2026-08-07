@@ -6,7 +6,7 @@ import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 const initialState = {
     titulo: '', sinopsis: '', director: '', anio_estreno: '', duracion_minutos: '',
     clasificacion: 'TP', portada_url: '', banner_url: '', trailer_url: '',
-    estado: 'borrador', destacada: false,
+    estado: 'borrador', destacada: false, estreno: false,
     generos: [], actores: [],
 };
 

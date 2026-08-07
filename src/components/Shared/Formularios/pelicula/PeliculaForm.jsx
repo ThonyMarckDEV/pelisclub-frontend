@@ -129,7 +129,7 @@ const PeliculaForm = ({ data, handleChange }) => {
                         </select>
                     </div>
 
-                    <div className="md:col-span-12 flex items-center gap-2 pt-1">
+                    <div className="md:col-span-6 flex items-center gap-2 pt-1">
                         <input
                             type="checkbox"
                             id="destacada"
@@ -139,6 +139,19 @@ const PeliculaForm = ({ data, handleChange }) => {
                         />
                         <label htmlFor="destacada" className="text-sm text-white/70 font-medium cursor-pointer select-none">
                             Marcar como destacada (aparece en el hero de Home)
+                        </label>
+                    </div>
+
+                    <div className="md:col-span-6 flex items-center gap-2 pt-1">
+                        <input
+                            type="checkbox"
+                            id="estreno"
+                            checked={data.estreno || false}
+                            onChange={(e) => handleChange('estreno', e.target.checked)}
+                            className="w-4 h-4 accent-[#E8B04B] cursor-pointer"
+                        />
+                        <label htmlFor="estreno" className="text-sm text-white/70 font-medium cursor-pointer select-none">
+                            Marcar como estreno (aparece primero en el catálogo)
                         </label>
                     </div>
                 </div>

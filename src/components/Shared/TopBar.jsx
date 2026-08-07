@@ -5,6 +5,8 @@ import { useAuth } from "context/AuthContext";
 import LoginModal from "components/Shared/Modals/Auth/LoginModal";
 import { generos as fetchGeneros, peliculas as fetchPeliculas, series as fetchSeries } from "services/publicoService";
 import logo from "assets/img/logo.png";
+import { Heart } from "lucide-react";
+import { useFavoritos } from "context/FavoritosContext";
 
 const CATALOGO = [
   { nombre: "Estrenos", slug: "estrenos" },
@@ -215,6 +217,8 @@ const TopBar = () => {
   const menuRef = useRef(null);
   const navigate = useNavigate();
 
+  const { contador } = useFavoritos();
+
   useEffect(() => {
     const loadGeneros = async () => {
       try {
@@ -290,6 +294,16 @@ const TopBar = () => {
 
           <div className="flex items-center gap-3">
             <SearchBox onNavigateSearch={irABusqueda} onSelectItem={handleSelectItem} />
+            {isAuthenticated && (
+                <Link to="/favoritos" className="relative p-2 text-white/60 hover:text-[#E8B04B] transition-colors">
+                    <Heart size={18} />
+                    {contador > 0 && (
+                        <span className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center bg-[#E8B04B] text-black text-[9px] font-black rounded-full">
+                            {contador > 9 ? "9+" : contador}
+                        </span>
+                    )}
+                </Link>
+            )}
 
             {isAuthenticated ? (
               <div className="relative" ref={menuRef}>

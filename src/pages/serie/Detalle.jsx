@@ -5,6 +5,7 @@ import { Play, Film, Tv, Youtube, X } from "lucide-react";
 import { showSerie, temporadaEpisodios, showEpisodio } from "services/publicoService";
 import VideoOpcionesModal from "components/Shared/Modals/pelicula/VideoOpcionesModal";
 import EstrellasCalificacion from "pages/calificacion/EstrellasCalificacion";
+import BotonFavorito from "components/Shared/Botones/Favorito/BotonFavorito";
 
 const getYoutubeEmbed = (url) => {
     if (!url) return null;
@@ -177,8 +178,8 @@ const SerieDetalle = () => {
                                 </div>
                             )}
 
-                            {embedUrl && (
-                                <div className="flex justify-center md:justify-start mb-5">
+                            <div className="flex flex-col sm:flex-row justify-center md:justify-start gap-3 mb-5">
+                                {embedUrl && (
                                     <button
                                         onClick={() => setShowTrailer(true)}
                                         className="flex items-center justify-center gap-2 px-6 py-3.5 bg-white/10 hover:bg-white/20 text-white text-sm font-bold rounded-sm border border-white/15 transition-colors"
@@ -186,8 +187,10 @@ const SerieDetalle = () => {
                                         <Youtube size={18} />
                                         Ver tráiler
                                     </button>
-                                </div>
-                            )}
+                                )}
+
+                                <BotonFavorito serieId={serie.id} />
+                            </div>
 
                             <div className="mb-6">
                                 <EstrellasCalificacion

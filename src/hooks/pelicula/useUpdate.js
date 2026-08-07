@@ -14,7 +14,7 @@ export const useUpdate = () => {
     const [formData, setFormData] = useState({
         titulo: '', sinopsis: '', director: '', anio_estreno: '', duracion_minutos: '',
         clasificacion: 'TP', portada_url: '', banner_url: '', trailer_url: '',
-        estado: 'borrador', destacada: false,
+        estado: 'borrador', destacada: false, estreno: false,
         generos: [], actores: [],
     });
 
@@ -35,6 +35,7 @@ export const useUpdate = () => {
                     trailer_url:       data.trailer_url        || '',
                     estado:            data.estado             || 'borrador',
                     destacada:         data.destacada          || false,
+                    estreno:           data.estreno            || false,
                     generos:           data.generos            || [],
                     actores:           data.actores            || [],
                 });

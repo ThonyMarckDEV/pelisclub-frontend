@@ -6,6 +6,7 @@ import { showPelicula } from "services/publicoService";
 import VideoOpcionesModal from "components/Shared/Modals/pelicula/VideoOpcionesModal";
 import ComentariosSection from "components/Shared/Modals/pelicula/ComentariosSection";
 import EstrellasCalificacion from "pages/calificacion/EstrellasCalificacion";
+import BotonFavorito from "components/Shared/Botones/Favorito/BotonFavorito";
 
 const getYoutubeEmbed = (url) => {
     if (!url) return null;
@@ -173,6 +174,8 @@ const PeliculaDetalle = () => {
                                         Ver tráiler
                                     </button>
                                 )}
+
+                                <BotonFavorito peliculaId={pelicula.id} />
                             </div>
 
                             <div className="mb-6">

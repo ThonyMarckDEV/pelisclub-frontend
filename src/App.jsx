@@ -46,6 +46,8 @@ import SerieDetalle from 'pages/serie/Detalle';
 
 import GestionTemporadas from 'pages/temporada/Gestion';
 
+import Favoritos from 'pages/favoritos/Favoritos';
+
 // UI LEGAL
 import PoliticaPrivacidad from 'pages/legal/PoliticaPrivacidad';
 import Terminos from 'pages/legal/Terminos';
@@ -56,6 +58,7 @@ import ListarRoles from 'pages/rol/Index';
 // Utilities
 import ProtectedRoute from 'utilities/ProtectedRoutes/ProtectedRoute';
 import { AuthProvider } from 'context/AuthContext';
+import { FavoritosProvider } from 'context/FavoritosContext';
 
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
@@ -69,6 +72,7 @@ function AppContent() {
         <Route path="/serie/:slug" element={<SerieDetalle />} />
         <Route path="/privacidad" element={<PoliticaPrivacidad />} />
         <Route path="/terminos" element={<Terminos />} />
+        <Route path="/favoritos" element={<Favoritos />} />
       </Route>
 
       {/* 2. PANEL ADMIN — solo admin/superadmin */}
@@ -119,10 +123,12 @@ function App() {
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <Router>
         <AuthProvider>
-          <div className="min-h-screen bg-black text-white">
-            <AppContent />
-            <ToastContainer position="top-right" autoClose={3000} />
-          </div>
+          <FavoritosProvider>
+            <div className="min-h-screen bg-black text-white">
+              <AppContent />
+              <ToastContainer position="top-right" autoClose={3000} />
+            </div>
+          </FavoritosProvider>
         </AuthProvider>
       </Router>
     </GoogleOAuthProvider>
